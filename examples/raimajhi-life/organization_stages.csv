@@ -1,0 +1,5 @@
+stage_id,org_id,label,start_date,end_date,show_boundary,x_offset,related_person_ids
+stage_contested,ncp_raimajhi,腊伊玛吉控制的中央,1962-04-01,1966-01-01,no,-0.16,raimajhi
+stage_ncp_raimajhi,ncp_raimajhi,尼共（腊伊玛吉）,1966-01-01,1983-07-01,yes,-0.16,raimajhi
+stage_new_party,ncp_raimajhi,再次建党,1983-07-01,1986-01-01,yes,-0.16,raimajhi
+stage_people_party,ncp_raimajhi,尼泊尔人民党,1991-01-01,1991-05-31,yes,-0.16,raimajhi

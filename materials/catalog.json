@@ -1,0 +1,27 @@
+[
+  {
+    "id": "wty-book",
+    "title": "汪亭友《尼泊尔共产党（毛主义者）的历史、执政及其嬗变探究》",
+    "kind": "books",
+    "scope": "local",
+    "path": "materials/local/books/尼共毛（汪亭友）.pdf",
+    "note": "本图使用书内第28—32页；扫描PDF第40—44页。",
+    "sha256": "1b4bcb61cec2e79dc2c41387fad6986e79e996f55c8eb55cd41713af34ed6084"
+  },
+  {
+    "id": "raimajhi-life-full",
+    "title": "阿迪卡里与腊伊玛吉原文数据",
+    "kind": "datasets",
+    "scope": "local",
+    "path": "materials/local/datasets/raimajhi-life",
+    "note": "含原书摘录，供本机图中悬浮说明使用。"
+  },
+  {
+    "id": "raimajhi-life-example",
+    "title": "阿迪卡里与腊伊玛吉结构化示例",
+    "kind": "datasets",
+    "scope": "tracked",
+    "path": "examples/raimajhi-life",
+    "note": "不含长段原文；可直接生成简要版交互图。"
+  }
+]

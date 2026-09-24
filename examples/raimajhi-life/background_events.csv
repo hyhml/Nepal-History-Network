@@ -1,0 +1,11 @@
+background_id,event_date,end_date,org_id,title,description,date_precision,source_id,source_excerpt,show_label,label_position
+background_1959_election,1959-01-01,,political_background,议会选举,尼共参加当年的议会选举,year,WTY-P31,,yes,middle right
+background_1960_royal_rule,1960-01-01,1990-01-01,political_background,王室：解散议会／各党遭禁,王室主导并推行无党派评议会制度,year,WTY-P30-P31,,yes,middle right
+background_1960_dissolution,1960-09-01,,political_background,国王解散议会,马亨德拉国王解散议会，尼共和其他党派随后遭禁,month,WTY-P31,,yes,middle right
+background_1961_policy_debate,1961-01-01,,political_background,议会民主制或民主共和,党内围绕恢复议会、联合大会党或召开制宪议会发生分歧,year,WTY-P30,,yes,middle right
+background_1979_unrest,1979-04-01,,political_background,全国性政治骚乱／反评议会制度,学生运动发展为全国性政治骚乱,month,WTY-P31-P32,,yes,middle right
+background_1990_transition,1990-01-01,1991-05-31,political_background,恢复民主／过渡政府,国王委派过渡政府并推进制宪,year,WTY-P32,,yes,middle right
+background_1991_election,1991-05-01,,political_background,议会大选,过渡政府在1991年5月大选时结束,month,WTY-P32,,yes,middle right
+background_2001_palace,2001-06-01,,political_background,王室：王宫血案与继位,王宫血案后发生王室内部剧变,year,WTY-P32,,yes,middle right
+background_2006_war_end,2006-01-01,,political_background,尼泊尔内战结束,书中以此作为其政治生涯结束前的背景,year,WTY-P32,,yes,middle right
+background_2008_monarchy_end,2008-01-01,,political_background,王权被废除,王权废除并伴随腊伊玛吉政治生涯结束,year,WTY-P32,,yes,middle right

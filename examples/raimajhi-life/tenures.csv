@@ -1,0 +1,13 @@
+tenure_id,person_id,org_id,role,start_date,end_date,date_precision,status,source_id,notes,track,line_style,x_offset
+adhikari_ncp_gs,adhikari,ncp_unified,尼共中央总书记,1954-01-27,1957-06-01,mixed,uncertain,WTY-P28-P31,1954年尼共一大选举其为总书记；终点按1957年二大会期定位，不代表原书提供了具体卸任日,political,dash,-0.16
+raimajhi_ncp_leadership,raimajhi,ncp_unified,中央领导人（1957年起任总书记）,1954-01-01,1961-03-01,mixed,reported,WTY-P31,1954年进入中央委员会；1956年9月任中央执行书记；1957年当选总书记,political,solid,0
+raimajhi_contested_centre,raimajhi,ncp_raimajhi,控制另一中央,1962-04-01,1966-01-01,mixed,disputed,WTY-P31,拒绝接受处分及三大合法性；书中称尼共实际形成两个中央,political,dash,-0.16
+raimajhi_ncp_raimajhi,raimajhi,ncp_raimajhi,总书记／主要领导人,1966-01-01,1983-07-01,year,reported,WTY-P31-P32,1966年正式另立中央；1967年另开三大；1983年被开除,political,solid,-0.16
+raimajhi_post_1983_party,raimajhi,ncp_raimajhi,另立新党并自任总书记,1983-07-01,1986-01-01,year,reported,WTY-P32,1983年被尼共（腊伊玛吉）开除后另立新党；1986年又被该党开除,political,dash,-0.16
+raimajhi_people_party,raimajhi,ncp_raimajhi,尼泊尔人民党（社会民主主义）领导人,1991-01-01,1991-05-31,year,reported,WTY-P32,大选前组成；竞选失败后随即解散,political,dash,-0.16
+raimajhi_education_minister,raimajhi,ncp_raimajhi,过渡政府教育大臣,1990-01-01,1991-05-31,mixed,reported,WTY-P32,受国王委派并代表国王监督制宪运动,public_office,solid,0.20
+raimajhi_royal_affairs,raimajhi,ncp_raimajhi,皇家事务委员会主席,1991-06-01,2008-01-01,year,uncertain,WTY-P32,起止年份依据段落顺序作图；原书未明确给出任期,public_office,dash,0.20
+adhikari_ncp_unity_congress,adhikari,ncp_unity_congress,创建者／主要领导人,1982-01-01,1986-01-01,year,reported,WTY-P30,1982年创建尼共（统一大会）；1986年该党并入尼共（马）,political,solid,-0.16
+adhikari_ncp_uml_chair,adhikari,ncp_uml,党主席,1991-01-01,1993-09-01,month,reported,WTY-P30,1991年1月参与联合成立尼共（联合马列）并当选党主席,political,solid,-0.16
+adhikari_ncp_uml_chair_reelected,adhikari,ncp_uml,党主席（1993年再次当选；任期终止时间未载）,1993-09-01,1999-04-26,mixed,uncertain,WTY-P30,原书未说明1993年再次当选后的任期终止时间；线段止于去世日仅为显示边界,political,dash,-0.16
+adhikari_pm,adhikari,ncp_uml,尼泊尔首相,1994-11-01,1995-09-01,month,reported,WTY-P30,1994年11月当选；1995年9月辞职,public_office,solid,0.20

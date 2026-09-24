@@ -1,0 +1,5 @@
+relation_id,source_org_id,target_org_id,relation_type,event_date,description,date_precision,source_id,related_person_ids
+relation_two_centres,ncp_unified,ncp_raimajhi,split,1962-04-01,被三大开除后拒绝处分并继续控制另一中央；书中称实际形成两个中央,month,WTY-P31,raimajhi
+relation_manandhar_split,ncp_raimajhi,ncp_manandhar,split,1981-01-01,马南达尔带领一大部分党员脱离并另立尼共（马南达尔）,year,WTY-P32,raimajhi
+relation_adhikari_unity_marxist,ncp_unity_congress,ncp_marxist,merge,1986-01-01,尼共（统一大会）并入尼共（马）；原书未说明个人职务如何承接,year,WTY-P30,adhikari
+relation_adhikari_marxist_uml,ncp_marxist,ncp_uml,merge,1991-01-01,尼共（马）与尼共（马列）联合成立尼共（联合马列）；合并方之一未在人物轨迹中展开,year,WTY-P30,adhikari
