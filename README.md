@@ -2,6 +2,8 @@
 
 一个独立、轻量的尼泊尔政治人物与组织时序图工具。项目用普通文件保存用户要求、设计规范和资料目录；Plotly 只负责生成可离线打开的交互 HTML。
 
+在线交互图：[打开尼泊尔人物—组织网络图](https://hyhml.github.io/Nepal-History-Network/)。网站由 GitHub Pages 从 `main` 分支的 `docs/` 目录直接发布。
+
 ## 立即使用
 
 ```bash
@@ -11,6 +13,14 @@ python3 -m venv .venv
 ```
 
 输出在 `output/adhikari-raimajhi-1954-2012.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用保留书中原文的本地数据；其他机器默认使用仓库内的结构化示例。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
+
+更新在线图时运行：
+
+```bash
+.venv/bin/python build_chart.py --data-dir examples/raimajhi-life --output docs/index.html --cdn
+```
+
+提交 `docs/index.html` 后，GitHub Pages 会自动发布新版本。在线图的悬浮说明使用简要描述，并从 Plotly CDN 加载图表脚本以减小网页文件；本地图使用书中摘录，默认生成可离线使用的完整 HTML。
 
 ## 两项日常工作
 

@@ -717,6 +717,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", type=Path, default=default_data)
     parser.add_argument("--output", type=Path, default=PROJECT_ROOT / "output/adhikari-raimajhi-1954-2012.html")
     parser.add_argument("--title", default="阿迪卡里与腊伊玛吉：党内交替、组织流变与政府职务（1954—2012）")
+    parser.add_argument("--cdn", action="store_true", help="在线网页从 Plotly CDN 加载脚本；默认将脚本嵌入 HTML 以供离线使用")
     return parser.parse_args()
 
 
@@ -730,7 +731,7 @@ def main() -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.write_html(
         output_path,
-        include_plotlyjs=True,
+        include_plotlyjs="cdn" if args.cdn else True,
         full_html=True,
         div_id="temporal_network",
         post_script=build_focus_post_script(frames["people"]),
