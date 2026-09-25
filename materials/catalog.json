@@ -22,6 +22,6 @@
     "kind": "datasets",
     "scope": "tracked",
     "path": "examples/raimajhi-life",
-    "note": "不含长段原文；可直接生成简要版交互图。"
+    "note": "含事件和背景节点的书中摘录；可直接生成公开交互图。"
   }
 ]

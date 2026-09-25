@@ -12,7 +12,7 @@ python3 -m venv .venv
 .venv/bin/python build_chart.py
 ```
 
-输出在 `output/adhikari-raimajhi-1954-2012.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用保留书中原文的本地数据；其他机器默认使用仓库内的结构化示例。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
+输出在 `output/adhikari-raimajhi-1954-2012.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用该数据；其他机器使用仓库内的结构化示例。两者都包含当前事件的书中摘录。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
 
 更新在线图时运行：
 
@@ -20,7 +20,7 @@ python3 -m venv .venv
 .venv/bin/python build_chart.py --data-dir examples/raimajhi-life --output docs/index.html --cdn
 ```
 
-提交 `docs/index.html` 后，GitHub Pages 会自动发布新版本。在线图的悬浮说明使用简要描述，并从 Plotly CDN 加载图表脚本以减小网页文件；本地图使用书中摘录，默认生成可离线使用的完整 HTML。
+提交 `docs/index.html` 后，GitHub Pages 会自动发布新版本。在线图的事件悬浮说明显示书中摘录，并从 Plotly CDN 加载图表脚本以减小网页文件；本地图默认生成可离线使用的完整 HTML。
 
 ## 两项日常工作
 
@@ -47,7 +47,7 @@ python3 project.py material add /path/to/file.pdf --id another-book --title "书
 ## 边界与版本
 
 - 程序生成的图、输入数据、资料和规范均位于本项目根目录内。`build_chart.py` 拒绝项目外的输入与输出路径。
-- 原始扫描书和长篇原文摘录只存放在 `materials/local/`。仓库中的 `examples/` 保留事实表、来源定位和简要叙述，便于公开版本回滚。
+- 扫描 PDF 存放在 `materials/local/`；仓库中的 `examples/` 保存事实表、来源定位和事件摘录，便于公开版本回滚。
 - 每次设计改变都更新 `docs/design-spec.md`；稳定里程碑写入 `CHANGELOG.md` 并打 Git 标签。查看旧版可用 `git tag --list` 和 `git log --oneline`；在独立分支查看旧版可用 `git switch -c review-v0.1.0 v0.1.0`。
 
 当前设计详见 [设计规范](docs/design-spec.md)，资料位置详见 [资料目录](materials/catalog.json)。
