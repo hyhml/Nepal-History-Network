@@ -196,6 +196,12 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     x_for_org = dict(zip(organizations["org_id"], organizations["display_order"]))
     color_for_org = dict(zip(organizations["org_id"], organizations["color"]))
     name_for_org = dict(zip(organizations["org_id"], organizations["name_zh"]))
+    branch_note_for_org = dict(
+        zip(
+            organizations["org_id"],
+            organizations.get("branch_note", pd.Series("", index=organizations.index)),
+        )
+    )
     name_for_person = dict(zip(people["person_id"], people["name_zh"]))
     full_name_for_person = {
         row.person_id: (
@@ -350,6 +356,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     for tenure in tenures.itertuples(index=False):
         person_name = name_for_person[tenure.person_id]
         org_name = name_for_org[tenure.org_id]
+        org_note = branch_note_for_org[tenure.org_id]
         x = person_x(tenure)
         dash = "dash" if tenure.status in {"disputed", "uncertain"} else "solid"
         if "line_style" in tenures.columns and tenure.line_style:
@@ -364,8 +371,10 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "mixed": "混合",
             "uncertain": "时间仅为图示定位",
         }.get(tenure.date_precision, tenure.date_precision)
+        org_context = f"<br>组织识别：{escape(org_note)}" if org_note else ""
         hover = (
-            f"<b>{person_name}</b><br>{org_name}<br>职务：{tenure.role}"
+            f"<b>{person_name}</b><br>{org_name}{org_context}"
+            f"<br>职务：{tenure.role}"
             f"<br>起：{format_tenure_date(tenure.start_date, tenure.date_precision)}"
             f"<br>止：{format_tenure_date(tenure.end_date, tenure.date_precision)}"
             f"<br>精度：{precision_label}"
@@ -434,6 +443,13 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             for value in str(getattr(relation, "related_person_ids", "")).split(";")
             if value.strip()
         ]
+        source_note = branch_note_for_org[relation.source_org_id]
+        target_note = branch_note_for_org[relation.target_org_id]
+        branch_context = "".join(
+            f"<br>{side}分支：{escape(note)}"
+            for side, note in (("起点", source_note), ("终点", target_note))
+            if note
+        )
         fig.add_trace(
             go.Scatter(
                 x=[x_for_org[relation.source_org_id], x_for_org[relation.target_org_id]],
@@ -445,6 +461,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     f"<b>{relation_labels.get(relation.relation_type, relation.relation_type)}</b>"
                     f"<br>{name_for_org[relation.source_org_id]} → "
                     f"{name_for_org[relation.target_org_id]}"
+                    f"{branch_context}"
                     f"<br>{relation.description}"
                     "<extra></extra>"
                 ),
@@ -537,7 +554,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         height=chart_height,
         width=chart_width,
         autosize=False,
-        margin={"l": 100, "r": 330, "t": 155, "b": 80},
+        margin={"l": 100, "r": 330, "t": 195, "b": 80},
         hovermode="closest",
         hoverlabel={
             "align": "left",
@@ -549,7 +566,14 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "title": "党派／组织",
             "tickmode": "array",
             "tickvals": organizations["display_order"].tolist(),
-            "ticktext": organizations["short_name"].tolist(),
+            "ticktext": [
+                escape(row.short_name)
+                + (
+                    f"<br><span style='font-size:11px;color:#64748b'>〔{escape(row.branch_note)}〕</span>"
+                    if getattr(row, "branch_note", "") else ""
+                )
+                for row in organizations.itertuples(index=False)
+            ],
             "tickangle": -50,
             "range": [organizations["display_order"].min() - 0.6, organizations["display_order"].max() + 0.6],
             "side": "top",
