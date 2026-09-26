@@ -9,3 +9,7 @@ background_1991_election,1991-05-01,,political_background,议会大选,过渡政
 background_2001_palace,2001-06-01,,political_background,王室：王宫血案与继位,王宫血案后发生王室内部剧变,year,WTY-P32,此后，腊伊玛吉担任皇家事务委员会主席，见证了2001年王宫血案后王室内部剧变和贾兰德拉继位。,yes,middle right
 background_2006_war_end,2006-01-01,,political_background,尼泊尔内战结束,书中以此作为其政治生涯结束前的背景,year,WTY-P32,随着2006年尼泊尔内战结束以及2008年王权被废除，这位追随王室几十年的忠顺奴仆就此结束了政治生涯。,yes,middle right
 background_2008_monarchy_end,2008-01-01,,political_background,王权被废除,王权废除并伴随腊伊玛吉政治生涯结束,year,WTY-P32,随着2006年尼泊尔内战结束以及2008年王权被废除，这位追随王室几十年的忠顺奴仆就此结束了政治生涯。,yes,middle right
+background_1949_rana_rule,1949-04-22,,political_background,拉纳家族统治,尼泊尔共产党筹建时的当权结构,day,WTY-P27,1949年4月22日，流亡印度的尼泊尔籍革命者在加尔各答集会，认为有必要在尼泊尔成立共产党组织，以发动革命推翻拉纳独裁政权，在尼泊尔建立民主共和国。,yes,middle right
+background_1952_ncp_ban,1952-01-24,1956-01-01,political_background,尼共遭取缔／转入地下,国王以反君主制和支持农民暴动为由取缔尼共,uncertain,WTY-P28,1952年1月24日，在大会党的支持下，特里布文以反对君主制和支持农民暴动为由取缔尼共。尼共由合法变为非法，被迫转入地下；直到1956年，尼共主要领导人承诺只进行和平运动，其合法身份才得以恢复。,yes,middle right
+background_1991_congress_government,1991-05-12,1994-07-10,political_background,大会党政府／经济政策争议,议会大选后大会党组阁；1994年7月政府倒台,day,WTY-P47-P51,1991年5月12日尼泊尔举行议会选举，大会党赢得110个议席，组建柯伊拉腊政府。书中批评其经济上实行自由放任的新自由主义、外交上仍倚仗印度；1992年初出现严重经济危机。1994年7月10日柯伊拉腊辞去首相职务。,yes,middle right
+background_1995_romeo,1995-11-01,,political_background,大会党政府“罗密欧行动”,对尼共（毛）活动的中西部山区采取军事行动,month,WTY-P54-P59,1995年11月，大会党政府以打击恐怖主义为名，对尼共（毛）活动的中西部山区、主要是罗尔帕和鲁孔发动代号“罗密欧”的军事行动。书中记载政府从加德满都调集约1500名警察，约6000人逃离或被驱逐，1000多人遭监禁、判刑或折磨，10多人被打死。,yes,middle right

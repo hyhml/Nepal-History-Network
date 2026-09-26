@@ -5,12 +5,12 @@
     "kind": "books",
     "scope": "local",
     "path": "materials/local/books/尼共毛（汪亭友）.pdf",
-    "note": "本图使用书内第28—32页；扫描PDF第40—44页。",
+    "note": "本图使用书内第27—59页的相关叙述；扫描PDF对应第39—71页。",
     "sha256": "1b4bcb61cec2e79dc2c41387fad6986e79e996f55c8eb55cd41713af34ed6084"
   },
   {
     "id": "raimajhi-life-full",
-    "title": "阿迪卡里与腊伊玛吉原文数据",
+    "title": "尼泊尔五位人物的本地原文数据",
     "kind": "datasets",
     "scope": "local",
     "path": "materials/local/datasets/raimajhi-life",
@@ -18,7 +18,7 @@
   },
   {
     "id": "raimajhi-life-example",
-    "title": "阿迪卡里与腊伊玛吉结构化示例",
+    "title": "尼泊尔五位人物结构化示例",
     "kind": "datasets",
     "scope": "tracked",
     "path": "examples/raimajhi-life",

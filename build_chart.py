@@ -7,6 +7,7 @@ import argparse
 from html import escape
 import json
 from pathlib import Path
+import re
 import textwrap
 
 import pandas as pd
@@ -163,6 +164,19 @@ def build_event_hover(
     if "source_excerpt" in row.index and str(row["source_excerpt"]).strip():
         return heading + wrap_hover(row["source_excerpt"]) + "<extra></extra>"
     return heading + wrap_hover(row["description"]) + "<extra></extra>"
+
+
+def format_tenure_date(value: pd.Timestamp, precision: str) -> str:
+    """Keep plotting placeholders from masquerading as attested calendar days."""
+    if precision in {"year", "uncertain"}:
+        return f"{value.year}年"
+    if precision == "month":
+        return f"{value.year}年{value.month}月"
+    if precision == "mixed" and value.day == 1:
+        if value.month == 1:
+            return f"{value.year}年（制图定位）"
+        return f"{value.year}年{value.month}月"
+    return f"{value.year}年{value.month}月{value.day}日"
 
 
 def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
@@ -343,11 +357,19 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         line_color = person_color_for.get(
             tenure.person_id, color_for_org[tenure.org_id]
         )
+        precision_label = {
+            "day": "日",
+            "month": "月",
+            "year": "年",
+            "mixed": "混合",
+            "uncertain": "时间仅为图示定位",
+        }.get(tenure.date_precision, tenure.date_precision)
         hover = (
             f"<b>{person_name}</b><br>{org_name}<br>职务：{tenure.role}"
-            f"<br>起：{tenure.start_date.date()}<br>止：{tenure.end_date.date()}"
-            f"<br>精度：{tenure.date_precision}"
-            f"<br>{tenure.notes}<extra></extra>"
+            f"<br>起：{format_tenure_date(tenure.start_date, tenure.date_precision)}"
+            f"<br>止：{format_tenure_date(tenure.end_date, tenure.date_precision)}"
+            f"<br>精度：{precision_label}"
+            f"<br>{wrap_hover(tenure.notes)}<extra></extra>"
         )
         fig.add_trace(
             go.Scatter(
@@ -506,27 +528,16 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 captureevents=True,
             )
 
-    date_columns = [
-        tenures["start_date"],
-        tenures["end_date"],
-        events["event_date"],
-        relations["event_date"],
-    ]
-    if not backgrounds.empty:
-        date_columns.append(backgrounds["event_date"])
-        if "end_date" in backgrounds.columns:
-            date_columns.append(backgrounds["end_date"].dropna())
-    if not stages.empty:
-        date_columns.extend([stages["start_date"], stages["end_date"]])
-    all_dates = pd.concat(date_columns, ignore_index=True)
-    year_span = max(1, int((all_dates.max() - all_dates.min()).days / 365.25))
-    chart_height = max(850, min(1500, 700 + year_span * 9))
+    chart_height = max(1500, min(2400, 850 + len(events) * 13))
+    chart_width = max(1450, len(organizations) * 125 + 330)
 
     fig.update_layout(
         title={"text": title, "x": 0.5},
         template="plotly_white",
         height=chart_height,
-        margin={"l": 100, "r": 330, "t": 100, "b": 80},
+        width=chart_width,
+        autosize=False,
+        margin={"l": 100, "r": 330, "t": 155, "b": 80},
         hovermode="closest",
         hoverlabel={
             "align": "left",
@@ -538,7 +549,8 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "title": "党派／组织",
             "tickmode": "array",
             "tickvals": organizations["display_order"].tolist(),
-            "ticktext": organizations["name_zh"].tolist(),
+            "ticktext": organizations["short_name"].tolist(),
+            "tickangle": -50,
             "range": [organizations["display_order"].min() - 0.6, organizations["display_order"].max() + 0.6],
             "side": "top",
             "showgrid": True,
@@ -715,8 +727,8 @@ def parse_args() -> argparse.Namespace:
     local_data = PROJECT_ROOT / "materials/local/datasets/raimajhi-life"
     default_data = local_data if local_data.is_dir() else PROJECT_ROOT / "examples/raimajhi-life"
     parser.add_argument("--data-dir", type=Path, default=default_data)
-    parser.add_argument("--output", type=Path, default=PROJECT_ROOT / "output/adhikari-raimajhi-1954-2012.html")
-    parser.add_argument("--title", default="阿迪卡里与腊伊玛吉：党内交替、组织流变与政府职务（1954—2012）")
+    parser.add_argument("--output", type=Path, default=PROJECT_ROOT / "output/nepal-history-network.html")
+    parser.add_argument("--title", default="尼泊尔政治人物与组织关系时序图（1949—2012）")
     parser.add_argument("--cdn", action="store_true", help="在线网页从 Plotly CDN 加载脚本；默认将脚本嵌入 HTML 以供离线使用")
     return parser.parse_args()
 
@@ -736,6 +748,8 @@ def main() -> None:
         div_id="temporal_network",
         post_script=build_focus_post_script(frames["people"]),
     )
+    html = output_path.read_text(encoding="utf-8")
+    output_path.write_text(re.sub(r"(?m)[ \t]+$", "", html), encoding="utf-8")
     print(f"已生成：{output_path}")
 
 

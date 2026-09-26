@@ -1,3 +1,6 @@
 person_id,name_zh,name_zh_full,name_en,name_ne,notes,color,marker_symbol,display_order
 adhikari,阿迪卡里,曼·莫汉·阿迪卡里,Man Mohan Adhikari,,据汪亭友书内第28—30页；未以其他来源复核,#0072B2,triangle-up,1
 raimajhi,腊伊玛吉,克沙尔·忠格·腊伊玛吉,Keshar Jung Rayamajhi,,本图据汪亭友书内第30—32页；中文全名按原书音译,#D55E00,circle,2
+pushpa_lal_shrestha,什雷斯塔,普什帕·拉尔·什雷斯塔,Pushpa Lal Shrestha,,尼共创始人；本图据汪亭友书内第27—34页,#009E73,diamond,3
+mohan_bikram_singh,辛格,莫汉·比克拉姆·辛格,Mohan Bikram Singh,,本图据汪亭友书内第34—39页,#CC79A7,square,4
+prachanda,普拉昌达,普什帕·卡玛尔·达哈尔（普拉昌达）,Pushpa Kamal Dahal (Prachanda),,本图据汪亭友书内第36—59页,#E69F00,star,5

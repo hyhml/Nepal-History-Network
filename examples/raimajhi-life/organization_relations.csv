@@ -3,3 +3,14 @@ relation_two_centres,ncp_unified,ncp_raimajhi,split,1962-04-01,被三大开除�
 relation_manandhar_split,ncp_raimajhi,ncp_manandhar,split,1981-01-01,马南达尔带领一大部分党员脱离并另立尼共（马南达尔）,year,WTY-P32,raimajhi
 relation_adhikari_unity_marxist,ncp_unity_congress,ncp_marxist,merge,1986-01-01,尼共（统一大会）并入尼共（马）；原书未说明个人职务如何承接,year,WTY-P30,adhikari
 relation_adhikari_marxist_uml,ncp_marxist,ncp_uml,merge,1991-01-01,尼共（马）与尼共（马列）联合成立尼共（联合马列）；合并方之一未在人物轨迹中展开,year,WTY-P30,adhikari
+relation_amatya_1962,ncp_unified,ncp_amatya,split,1962-04-01,三大选举阿玛提亚为总书记；什雷斯塔与其共同分担领导职责；腊伊玛吉集团另控中央,month,WTY-P31-P32,pushpa_lal_shrestha
+relation_shrestha_1968,ncp_amatya,ncp_pushpa_lal,split,1968-01-01,什雷斯塔带领大部分骨干脱离阿玛提亚领导的尼共另建尼共（普什帕·拉尔）,year,WTY-P33-P34,pushpa_lal_shrestha
+relation_fourth_masal,ncp_fourth_congress,ncp_masal,split,1983-11-01,辛格率追随者脱离尼共（四大）另建Masal；普拉昌达参与,month,WTY-P36-P39,mohan_bikram_singh;prachanda
+relation_masal_mashal,ncp_masal,ncp_mashal,split,1985-01-01,维迪亚派脱离辛格领导的Masal另建Mashal；普拉昌达转入后者,year,WTY-P36-P39,mohan_bikram_singh;prachanda
+relation_mashal_unity_centre,ncp_mashal,ncp_unity_centre,merge,1990-11-19,普拉昌达领导的Mashal—CC参与组建尼共（团结中心）,day,WTY-P47-P51,prachanda
+relation_fourth_unity_centre,ncp_fourth_congress,ncp_unity_centre,merge,1990-11-19,原尼共（四大）的一支参与组建尼共（团结中心）；该分支不归于辛格,day,WTY-P47-P51,prachanda
+relation_unity_centre_prachanda,ncp_unity_centre,ncp_unity_centre_prachanda,split,1994-05-01,普拉昌达与巴特拉伊在1994年5月后不久另立同名团结中心；确切日期未载,uncertain,WTY-P47-P51,prachanda
+relation_prachanda_maoist,ncp_unity_centre_prachanda,ncp_maoist,renamed,1995-03-01,普拉昌达派团结中心在中央委员会第三次扩大会议上更名尼共（毛）,month,WTY-P51-P52,prachanda
+relation_masal_unity_centre_masal,ncp_masal,ncp_unity_centre_masal,merge,2002-04-22,辛格的Masal与纳拉扬·卡吉·什雷斯塔领导的原团结中心合并,day,WTY-P36-P39,mohan_bikram_singh
+relation_original_unity_centre_masal,ncp_unity_centre,ncp_unity_centre_masal,merge,2002-04-22,原团结中心合并进入团结中心—Masal；不是普拉昌达派,day,WTY-P36-P39,mohan_bikram_singh
+relation_singh_2006,ncp_unity_centre_masal,ncp_unity_centre_masal_singh,split,2006-04-01,2006年4月恢复民主后辛格派另立同名党；具体日期未载,uncertain,WTY-P36-P39,mohan_bikram_singh

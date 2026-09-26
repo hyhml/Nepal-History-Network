@@ -12,7 +12,7 @@ python3 -m venv .venv
 .venv/bin/python build_chart.py
 ```
 
-输出在 `output/adhikari-raimajhi-1954-2012.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用该数据；其他机器使用仓库内的结构化示例。两者都包含当前事件的书中摘录。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
+输出在 `output/nepal-history-network.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用该数据；其他机器使用仓库内的结构化示例。当前两个数据目录已同步为五个人物，依据书内第60页之前的相关内容。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
 
 更新在线图时运行：
 
@@ -20,7 +20,7 @@ python3 -m venv .venv
 .venv/bin/python build_chart.py --data-dir examples/raimajhi-life --output docs/index.html --cdn
 ```
 
-提交 `docs/index.html` 后，GitHub Pages 会自动发布新版本。在线图的事件悬浮说明显示书中摘录，并从 Plotly CDN 加载图表脚本以减小网页文件；本地图默认生成可离线使用的完整 HTML。
+提交 `docs/index.html` 后，GitHub Pages 会自动发布新版本。在线图的事件悬浮说明显示书中摘录，并从 Plotly CDN 加载图表脚本以减小网页文件；本地图默认生成可离线使用的完整 HTML。党派列较多时页面可横向滚动，右侧人物聚焦栏固定在浏览器窗口内。
 
 ## 两项日常工作
 
