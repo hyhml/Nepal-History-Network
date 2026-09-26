@@ -161,6 +161,17 @@ def build_event_hover(
     person_name: str = "",
 ) -> str:
     heading = f"<b>{escape(person_name)}</b><br>" if person_name else ""
+    if row["person_id"] == "raimajhi":
+        event_type = row["event_type"]
+        if event_type == "public_office":
+            category = "党外任职"
+        elif event_type in {"context", "retirement"}:
+            category = "党外任职相关事件"
+        elif event_type == "death":
+            category = "生平事件"
+        else:
+            category = "党内事件"
+        heading += f"<b>{category}</b><br>"
     if "source_excerpt" in row.index and str(row["source_excerpt"]).strip():
         return heading + wrap_hover(row["source_excerpt"]) + "<extra></extra>"
     return heading + wrap_hover(row["description"]) + "<extra></extra>"
@@ -372,9 +383,16 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "uncertain": "时间仅为图示定位",
         }.get(tenure.date_precision, tenure.date_precision)
         org_context = f"<br>组织识别：{escape(org_note)}" if org_note else ""
+        if tenure.person_id == "raimajhi":
+            category = "党外任职" if tenure.track == "public_office" else "党内任职"
+            # Public offices share the drawing column but are not party offices.
+            affiliation = "" if tenure.track == "public_office" else f"<br>{escape(org_name)}{org_context}"
+            hover_heading = f"<b>{escape(person_name)}</b><br><b>{category}</b>{affiliation}"
+        else:
+            hover_heading = f"<b>{escape(person_name)}</b><br>{escape(org_name)}{org_context}"
         hover = (
-            f"<b>{person_name}</b><br>{org_name}{org_context}"
-            f"<br>职务：{tenure.role}"
+            f"{hover_heading}"
+            f"<br>职务：{escape(tenure.role)}"
             f"<br>起：{format_tenure_date(tenure.start_date, tenure.date_precision)}"
             f"<br>止：{format_tenure_date(tenure.end_date, tenure.date_precision)}"
             f"<br>精度：{precision_label}"
