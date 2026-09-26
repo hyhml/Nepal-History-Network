@@ -11,3 +11,4 @@
 {"id":"REQ-0011","date":"2026-09-25","source":"conversation","text":"为什么鼠标放在点上面拓展内容这么少了？之前几个版本好像是有书中的全文的"}
 {"id":"REQ-0012","date":"2026-09-26","source":"conversation","text":"根据60页之前的内容，继续更新人物，普拉昌达、什雷斯塔、辛格"}
 {"id":"REQ-0013","date":"2026-09-26","source":"conversation","text":"政党的名称显示跟书中的简写保持一致，再检查一下"}
+{"id":"REQ-0014","date":"2026-09-26","source":"conversation","text":"修改快捷键设置，按esc时，恢复到默认状态。"}

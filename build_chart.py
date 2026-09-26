@@ -615,6 +615,8 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   let lastOpacitySignature = traceIndices.map(i => gd.data[i].opacity == null ? 1 : gd.data[i].opacity).join(',');
   let lastStageOpacity = 0.24;
   const stageMeta = gd.layout.meta || {};
+  const initialXRange = Array.isArray(gd.layout.xaxis.range) ? gd.layout.xaxis.range.slice() : null;
+  const initialYRange = Array.isArray(gd.layout.yaxis.range) ? gd.layout.yaxis.range.slice() : null;
 
   const rail = document.createElement('aside');
   rail.id = 'person-focus-rail';
@@ -635,7 +637,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       <li>单击节点或人物线：锁定／取消</li>
       <li>Shift＋单击：加入对比，最多 3 人</li>
       <li>开启比较模式后，单击可增删对比人物</li>
-      <li>按 Esc 或点“全部人物”：清除选择</li>
+      <li>按 Esc 或点“全部人物”：恢复默认状态和初始视图</li>
     </ul>
     <small>人物轨迹按组织列共用位置显示；被选人物的事件与任职会同步高亮。</small>
   `;
@@ -712,20 +714,34 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     }
     update();
   }
+  function resetToDefault() {
+    selected.splice(0, selected.length);
+    hovered = null;
+    compareMode = false;
+    search.value = '';
+    compareButton.textContent = '比较模式：关';
+    compareButton.setAttribute('aria-pressed', 'false');
+    gd.__focusShiftClick = false;
+    if (Plotly.Fx && typeof Plotly.Fx.unhover === 'function') Plotly.Fx.unhover(gd);
+    update();
+    const axisReset = {};
+    if (initialXRange) axisReset['xaxis.range'] = initialXRange.slice();
+    if (initialYRange) axisReset['yaxis.range'] = initialYRange.slice();
+    if (Object.keys(axisReset).length) Plotly.relayout(gd, axisReset);
+    window.scrollTo(0, 0);
+  }
   search.addEventListener('change', () => {
     const id = personFromName(search.value);
     if (id) { selected.splice(0, selected.length, id); update(); }
   });
-  rail.querySelector('#focus-reset').addEventListener('click', () => {
-    selected.splice(0, selected.length); hovered = null; search.value = ''; update();
-  });
+  rail.querySelector('#focus-reset').addEventListener('click', resetToDefault);
   compareButton.addEventListener('click', () => {
     compareMode = !compareMode;
     compareButton.textContent = '比较模式：' + (compareMode ? '开' : '关');
     compareButton.setAttribute('aria-pressed', String(compareMode));
   });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') { selected.splice(0, selected.length); hovered = null; search.value = ''; update(); }
+    if (event.key === 'Escape') { event.preventDefault(); resetToDefault(); }
   });
   gd.addEventListener('click', event => { gd.__focusShiftClick = event.shiftKey; }, true);
   gd.on('plotly_hover', eventData => {
