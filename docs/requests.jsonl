@@ -13,3 +13,4 @@
 {"id":"REQ-0013","date":"2026-09-26","source":"conversation","text":"政党的名称显示跟书中的简写保持一致，再检查一下"}
 {"id":"REQ-0014","date":"2026-09-26","source":"conversation","text":"修改快捷键设置，按esc时，恢复到默认状态。"}
 {"id":"REQ-0015","date":"2026-09-26","source":"conversation","text":"腊伊玛吉的社会任职和党内任职合并，不然显得图形太乱了，鼠标放上的详情页面上区分他的党内事件和党外任职"}
+{"id":"REQ-0016","date":"2026-09-26","source":"conversation","text":"背景栏目重新写，主要内容包括当时当权的是哪个政府（哪个执政党？还是国王、首相？）、与外国特别是印度的关系。同时背景保持虚化。默认虚化选择普拉昌达。交互图就使用https://hyhml.github.io/Nepal-History-Network/这个网址，wangzi不需要添加版本号"}

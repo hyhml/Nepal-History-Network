@@ -177,6 +177,25 @@ def build_event_hover(
     return heading + wrap_hover(row["description"]) + "<extra></extra>"
 
 
+def build_background_hover(row: pd.Series) -> str:
+    """Keep governmental authority and India relations distinct in context."""
+    parts = [f"<b>{escape(str(row['title']))}</b>"]
+    for column, label in (
+        ("governing_authority", "当权者"),
+        ("india_relations", "对印关系"),
+    ):
+        if column in row.index and str(row[column]).strip():
+            parts.append(f"<b>{label}：</b>{wrap_hover(row[column])}")
+    detail = (
+        row["source_excerpt"]
+        if "source_excerpt" in row.index and str(row["source_excerpt"]).strip()
+        else row["description"]
+    )
+    if str(detail).strip():
+        parts.append(wrap_hover(detail))
+    return "<br>".join(parts) + "<extra></extra>"
+
+
 def format_tenure_date(value: pd.Timestamp, precision: str) -> str:
     """Keep plotting placeholders from masquerading as attested calendar days."""
     if precision in {"year", "uncertain"}:
@@ -322,15 +341,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             background_text_position = backgrounds["label_position"].replace(
                 "", "middle right"
             )
-        backgrounds["hover_text"] = backgrounds.apply(
-            lambda row: wrap_hover(
-                row["source_excerpt"]
-                if "source_excerpt" in row.index and str(row["source_excerpt"]).strip()
-                else row["description"]
-            )
-            + "<extra></extra>",
-            axis=1,
-        )
+        backgrounds["hover_text"] = backgrounds.apply(build_background_hover, axis=1)
         if "end_date" in backgrounds.columns:
             for background in backgrounds[backgrounds["end_date"].notna()].itertuples(
                 index=False
@@ -347,6 +358,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                         name="政治背景时期",
                         legendgroup="political-background-period",
                         showlegend=False,
+                        opacity=0.16,
                     )
                 )
         fig.add_trace(
@@ -360,6 +372,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 customdata=backgrounds[["hover_text"]].to_numpy(),
                 hovertemplate="%{customdata[0]}",
                 name="政治背景",
+                opacity=0.16,
             )
         )
 
@@ -627,7 +640,8 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   const traceIndices = gd.data.map((trace, i) =>
     trace.meta && (trace.meta.person_id || Array.isArray(trace.meta.related_person_ids)) ? i : -1
   ).filter(i => i >= 0);
-  const selected = [];
+  const defaultSelection = ['prachanda'];
+  const selected = defaultSelection.slice();
   let hovered = null;
   let compareMode = false;
   let lastOpacitySignature = traceIndices.map(i => gd.data[i].opacity == null ? 1 : gd.data[i].opacity).join(',');
@@ -647,7 +661,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       <button id="focus-reset" type="button">全部人物</button>
       <button id="compare-toggle" type="button" aria-pressed="false">比较模式：关</button>
     </div>
-    <div id="focus-status" role="status">当前：全部人物（淡显）</div>
+    <div id="focus-status" role="status">默认聚焦：普拉昌达</div>
     <hr>
     <h4>快捷操作</h4>
     <ul>
@@ -655,7 +669,8 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       <li>单击节点或人物线：锁定／取消</li>
       <li>Shift＋单击：加入对比，最多 3 人</li>
       <li>开启比较模式后，单击可增删对比人物</li>
-      <li>按 Esc 或点“全部人物”：恢复默认状态和初始视图</li>
+      <li>按 Esc：恢复默认聚焦普拉昌达和初始视图</li>
+      <li>点“全部人物”：取消人物聚焦</li>
     </ul>
     <small>人物轨迹按组织列共用位置显示；被选人物的事件与任职会同步高亮。</small>
   `;
@@ -732,8 +747,8 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     }
     update();
   }
-  function resetToDefault() {
-    selected.splice(0, selected.length);
+  function resetViewAndControls(nextSelection) {
+    selected.splice(0, selected.length, ...nextSelection);
     hovered = null;
     compareMode = false;
     search.value = '';
@@ -748,11 +763,15 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     if (Object.keys(axisReset).length) Plotly.relayout(gd, axisReset);
     window.scrollTo(0, 0);
   }
+  function resetToDefault() { resetViewAndControls(defaultSelection); }
+  function showAllPeople() {
+    resetViewAndControls([]);
+  }
   search.addEventListener('change', () => {
     const id = personFromName(search.value);
     if (id) { selected.splice(0, selected.length, id); update(); }
   });
-  rail.querySelector('#focus-reset').addEventListener('click', resetToDefault);
+  rail.querySelector('#focus-reset').addEventListener('click', showAllPeople);
   compareButton.addEventListener('click', () => {
     compareMode = !compareMode;
     compareButton.textContent = '比较模式：' + (compareMode ? '开' : '关');
