@@ -343,17 +343,26 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             )
         backgrounds["hover_text"] = backgrounds.apply(build_background_hover, axis=1)
         if "end_date" in backgrounds.columns:
+            period_x: list[float | None] = []
+            period_y: list[str | None] = []
+            period_text: list[str | None] = []
             for background in backgrounds[backgrounds["end_date"].notna()].itertuples(
                 index=False
             ):
                 x = x_for_org[background.org_id]
+                period_x.extend([x, x, None])
+                period_y.extend([background.event_date, background.end_date, None])
+                period_text.extend(
+                    [background.hover_text, background.hover_text, None]
+                )
+            if period_x:
                 fig.add_trace(
                     go.Scatter(
-                        x=[x, x],
-                        y=[background.event_date, background.end_date],
+                        x=period_x,
+                        y=period_y,
                         mode="lines",
                         line={"color": "#4D4D4D", "width": 8},
-                        text=[background.hover_text, background.hover_text],
+                        text=period_text,
                         hovertemplate="%{text}",
                         name="政治背景时期",
                         legendgroup="political-background-period",

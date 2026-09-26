@@ -12,7 +12,7 @@ python3 -m venv .venv
 .venv/bin/python build_chart.py
 ```
 
-输出在 `output/nepal-history-network.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用该数据；其他机器使用仓库内的结构化示例。当前两个数据目录已同步为五个人物，依据书内第60页之前的相关内容。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
+输出在 `output/nepal-history-network.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用该数据；其他机器使用仓库内的结构化示例。当前两个数据目录已同步为13个人物，人物资料依据书内第60页之前的相关内容。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
 
 更新在线图时运行：
 

@@ -12,6 +12,16 @@ from build_chart import (
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "examples" / "raimajhi-life"
+FIRST_BATCH = {
+    "baburam_bhattarai",
+    "tulsi_lal_amatya",
+    "nirmal_lama",
+    "mohan_vaidya",
+    "sahana_pradhan",
+    "madan_bhandari",
+    "bishnu_manandhar",
+    "krishna_raj_burma",
+}
 
 
 class RaimajhiHoverTest(unittest.TestCase):
@@ -77,6 +87,53 @@ class RaimajhiHoverTest(unittest.TestCase):
             for source_id in value.split(";")
         }
         self.assertFalse(used_sources - known_sources)
+        period_traces = [
+            trace for trace in background_traces if trace.name == "政治背景时期"
+        ]
+        self.assertEqual(len(period_traces), 1)
+
+    def test_first_batch_has_people_events_tenures_and_focus_entries(self):
+        person_ids = set(self.frames["people"]["person_id"])
+        self.assertEqual(len(person_ids), 13)
+        self.assertTrue(FIRST_BATCH <= person_ids)
+
+        for table_name in ("events", "tenures"):
+            represented = set(self.frames[table_name]["person_id"])
+            self.assertTrue(FIRST_BATCH <= represented)
+
+        script = build_focus_post_script(self.frames["people"])
+        for person_id in FIRST_BATCH:
+            self.assertIn(f'"id": "{person_id}"', script)
+
+    def test_first_batch_organization_paths_are_present(self):
+        relation_ids = set(self.frames["organization_relations"]["relation_id"])
+        self.assertTrue(
+            {
+                "relation_burma_split",
+                "relation_manandhar_united",
+                "relation_united_uml",
+                "relation_pushpa_liberation",
+                "relation_liberation_ml",
+                "relation_ml_uml",
+                "relation_fourth_masal",
+                "relation_masal_mashal",
+                "relation_mashal_unity_centre",
+                "relation_unity_people_front",
+                "relation_front_maoist",
+            }
+            <= relation_ids
+        )
+
+    def test_all_fact_source_references_resolve(self):
+        known_sources = set(self.frames["sources"]["source_id"])
+        for table_name in ("events", "tenures", "organization_relations"):
+            used_sources = {
+                source_id.strip()
+                for value in self.frames[table_name]["source_id"]
+                for source_id in value.split(";")
+                if source_id.strip()
+            }
+            self.assertFalse(used_sources - known_sources, table_name)
 
     def test_prachanda_is_the_default_focus(self):
         script = build_focus_post_script(self.frames["people"])
