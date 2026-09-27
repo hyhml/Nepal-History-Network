@@ -6,4 +6,4 @@
 
 `organization_relations.csv` 和 `organization_stages.csv` 的 `related_person_ids` 支持用分号关联多人。选中关联人物时，对应的组织分合线、阶段分隔线和名称一起高亮。
 
-`organizations.csv` 保存30个真实组织，`organization_lanes.csv` 将其中具有连续领导和继承关系的六组组织映射为共同显示列。公开图因此使用23条组织谱系，但悬浮框和关系数据仍显示具体组织名称。
+`organizations.csv` 保存30个真实组织，`organization_lanes.csv` 将其中具有连续领导和继承关系的六组组织映射为共同主列，并把三个短命单人组织作为支线节点挂在主列旁。公开图因此使用20条主列和3条支线；悬浮框和关系数据仍显示具体组织名称。

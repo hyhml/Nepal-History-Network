@@ -211,7 +211,7 @@ class RaimajhiHoverTest(unittest.TestCase):
             },
         }
         self.assertEqual(len(self.frames["organization_lanes"]), 23)
-        self.assertEqual(len(self.figure.layout.xaxis.tickvals), 23)
+        self.assertEqual(len(self.figure.layout.xaxis.tickvals), 20)
         for lane_id, org_ids in expected_groups.items():
             self.assertEqual(
                 set(organizations.loc[list(org_ids), "lane_id"]), {lane_id}
@@ -220,6 +220,23 @@ class RaimajhiHoverTest(unittest.TestCase):
                 len({organizations.loc[org_id, "name_zh"] for org_id in org_ids}),
                 len(org_ids),
             )
+
+    def test_short_lived_single_person_orgs_are_branch_nodes(self):
+        lanes = self.frames["organization_lanes"].set_index("lane_id")
+        organizations = self.frames["organizations"].set_index("org_id")
+        expected = {
+            "ncp_masal_sharma": "lane_masal_sharma",
+            "united_peoples_front_vaidya": "lane_people_front_vaidya",
+            "ncp_marxist_leninist_1998": "lane_uml_pradhan_1998_branch",
+        }
+        for org_id, lane_id in expected.items():
+            self.assertEqual(organizations.loc[org_id, "lane_id"], lane_id)
+            self.assertEqual(lanes.loc[lane_id, "lane_type"], "branch")
+            self.assertIn(lanes.loc[lane_id, "parent_lane_id"], lanes.index)
+            self.assertNotEqual(float(lanes.loc[lane_id, "branch_offset"]), 0.0)
+        branch_annotations = self.figure.layout.meta["focus_branch_annotations"]
+        self.assertEqual(len(branch_annotations), 3)
+        self.assertTrue(all(item["related_person_ids"] for item in branch_annotations))
 
     def test_lineage_stages_keep_person_specific_focus_metadata(self):
         stages = self.frames["organization_stages"]

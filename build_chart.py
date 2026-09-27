@@ -81,14 +81,34 @@ def validate_references(frames: dict[str, pd.DataFrame]) -> None:
             )
         if frames["organization_lanes"]["lane_id"].duplicated().any():
             raise ValueError("organization_lanes.csv 含重复 lane_id")
-        if frames["organization_lanes"]["display_order"].duplicated().any():
-            raise ValueError("organization_lanes.csv 含重复 display_order")
-        lanes = set(frames["organization_lanes"]["lane_id"])
+        lane_table = frames["organization_lanes"]
+        if "lane_type" not in lane_table.columns:
+            lane_table["lane_type"] = "main"
+        unknown_lane_types = sorted(set(lane_table["lane_type"]) - {"main", "branch"})
+        if unknown_lane_types:
+            raise ValueError("organization_lanes.csv 含未知 lane_type：" + str(unknown_lane_types))
+        main_lanes = lane_table[lane_table["lane_type"] != "branch"]
+        if main_lanes["display_order"].duplicated().any():
+            raise ValueError("organization_lanes.csv 的主列含重复 display_order")
+        lanes = set(lane_table["lane_id"])
         unknown_lanes = sorted(set(frames["organizations"]["lane_id"]) - lanes)
         if unknown_lanes:
             raise ValueError(
                 "organizations.csv 含未知 lane_id：" + str(unknown_lanes)
             )
+        if "parent_lane_id" not in lane_table.columns:
+            lane_table["parent_lane_id"] = ""
+        if "branch_offset" not in lane_table.columns:
+            lane_table["branch_offset"] = ""
+        branch_rows = lane_table[lane_table["lane_type"] == "branch"]
+        if branch_rows["branch_offset"].eq("").any():
+            raise ValueError("组织支线必须填写 branch_offset")
+        missing_parents = sorted(set(branch_rows["parent_lane_id"]) - lanes)
+        if missing_parents:
+            raise ValueError("组织支线含未知 parent_lane_id：" + str(missing_parents))
+        parent_types = dict(zip(lane_table["lane_id"], lane_table["lane_type"]))
+        if any(parent_types.get(parent) == "branch" for parent in branch_rows["parent_lane_id"]):
+            raise ValueError("组织支线的 parent_lane_id 必须指向主列")
 
     for table_name in ("tenures", "events"):
         table = frames[table_name]
@@ -244,15 +264,41 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             ["org_id", "short_name", "color", "display_order", "branch_note"]
         ].rename(columns={"org_id": "lane_id"})
         organizations["lane_id"] = organizations["org_id"]
+        display_lanes["lane_type"] = "main"
+        display_lanes["parent_lane_id"] = ""
+        display_lanes["branch_offset"] = ""
     else:
         lanes["display_order"] = lanes["display_order"].astype(int)
-        display_lanes = lanes.sort_values("display_order")
+        if "lane_type" not in lanes.columns:
+            lanes["lane_type"] = "main"
+        if "parent_lane_id" not in lanes.columns:
+            lanes["parent_lane_id"] = ""
+        if "branch_offset" not in lanes.columns:
+            lanes["branch_offset"] = ""
+        display_lanes = lanes[lanes["lane_type"] != "branch"].sort_values("display_order")
+    # Branch rows may reuse their parent's source display_order. Repack only
+    # the rendered main columns so removing a full column does not leave an
+    # empty gap in the axis.
+    display_lanes = display_lanes.copy()
+    display_lanes["display_order"] = range(len(display_lanes))
     if "track" not in tenures.columns:
         tenures["track"] = "organization"
     x_for_lane = dict(zip(display_lanes["lane_id"], display_lanes["display_order"]))
+    if not lanes.empty:
+        for branch in lanes[lanes["lane_type"] == "branch"].itertuples(index=False):
+            parent_x = x_for_lane.get(branch.parent_lane_id)
+            if parent_x is None:
+                raise ValueError(f"组织支线 {branch.lane_id} 的主列不存在：{branch.parent_lane_id}")
+            x_for_lane[branch.lane_id] = parent_x + float(branch.branch_offset)
     lane_for_org = dict(zip(organizations["org_id"], organizations["lane_id"]))
     x_for_org = {
         org_id: x_for_lane[lane_id] for org_id, lane_id in lane_for_org.items()
+    }
+    lane_type_by_id = dict(zip(display_lanes["lane_id"], display_lanes["lane_type"]))
+    if not lanes.empty:
+        lane_type_by_id.update(zip(lanes["lane_id"], lanes["lane_type"]))
+    lane_type_for_org = {
+        org_id: lane_type_by_id[lane_id] for org_id, lane_id in lane_for_org.items()
     }
     color_for_org = dict(zip(organizations["org_id"], organizations["color"]))
     name_for_org = dict(zip(organizations["org_id"], organizations["name_zh"]))
@@ -365,6 +411,45 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             }
         )
 
+    # Short-lived, single-person organizations are shown as branch nodes
+    # beside their parent lane. They keep their own facts and hover text but
+    # do not consume a full party column.
+    branch_annotations: list[dict[str, object]] = []
+    if not lanes.empty:
+        for branch in lanes[lanes["lane_type"] == "branch"].itertuples(index=False):
+            branch_orgs = organizations[organizations["lane_id"] == branch.lane_id]["org_id"]
+            branch_tenures = tenures[tenures["org_id"].isin(branch_orgs)]
+            if branch_tenures.empty:
+                continue
+            midpoint = branch_tenures["start_date"].min() + (
+                branch_tenures["end_date"].max() - branch_tenures["start_date"].min()
+            ) / 2
+            branch_people = sorted(set(branch_tenures["person_id"]))
+            branch_annotations.append(
+                {
+                    "index": len(fig.layout.annotations or []),
+                    "related_person_ids": branch_people,
+                }
+            )
+            fig.add_annotation(
+                x=x_for_lane[branch.lane_id],
+                y=midpoint,
+                text=f"<b>支线</b><br>{escape(branch.short_name)}",
+                showarrow=False,
+                bgcolor="rgba(255,255,255,0.88)",
+                bordercolor="rgba(122,81,149,0.45)",
+                borderwidth=1,
+                borderpad=2,
+                opacity=0.24,
+                font={"size": 11, "color": "#6b477d"},
+            )
+    fig.update_layout(
+        meta={
+            **(fig.layout.meta or {}),
+            "focus_branch_annotations": branch_annotations,
+        }
+    )
+
     # Contextual political events use their own lane and do not imply a
     # personal tenure or party affiliation.
     if not backgrounds.empty:
@@ -428,9 +513,12 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         org_name = name_for_org[tenure.org_id]
         org_note = branch_note_for_org[tenure.org_id]
         x = person_x(tenure)
+        lane_type = lane_type_for_org.get(tenure.org_id, "main")
         dash = "dash" if tenure.status in {"disputed", "uncertain"} else "solid"
         if "line_style" in tenures.columns and tenure.line_style:
             dash = tenure.line_style
+        if lane_type == "branch" and dash == "solid":
+            dash = "dot"
         line_color = person_color_for.get(
             tenure.person_id, color_for_org[tenure.org_id]
         )
@@ -462,11 +550,11 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 x=[x, x],
                 y=[tenure.start_date, tenure.end_date],
                 mode="lines+markers",
-                line={"color": line_color, "width": 4, "dash": dash},
+                line={"color": line_color, "width": 3 if lane_type == "branch" else 4, "dash": dash},
                 marker={
                     "size": 9,
                     "color": line_color,
-                    "symbol": person_symbol_for.get(tenure.person_id, "circle"),
+                    "symbol": "diamond" if lane_type == "branch" else person_symbol_for.get(tenure.person_id, "circle"),
                 },
                 text=[hover, hover],
                 hovertemplate="%{text}",
@@ -780,7 +868,8 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       (focus.some(id => (item.related_person_ids || []).includes(id)) ? 1 : 0.07);
     const stageShapeOpacities = (stageMeta.focus_stage_shapes || []).map(stageOpacity);
     const stageAnnotationOpacities = (stageMeta.focus_stage_annotations || []).map(stageOpacity);
-    const stageSignature = stageShapeOpacities.concat(stageAnnotationOpacities).join(',');
+    const branchAnnotationOpacities = (stageMeta.focus_branch_annotations || []).map(stageOpacity);
+    const stageSignature = stageShapeOpacities.concat(stageAnnotationOpacities, branchAnnotationOpacities).join(',');
     if (stageSignature !== lastStageSignature) {
       lastStageSignature = stageSignature;
       const updates = {};
@@ -789,6 +878,9 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       });
       (stageMeta.focus_stage_annotations || []).forEach((item, at) => {
         updates[`annotations[${item.index}].opacity`] = stageAnnotationOpacities[at];
+      });
+      (stageMeta.focus_branch_annotations || []).forEach((item, at) => {
+        updates[`annotations[${item.index}].opacity`] = branchAnnotationOpacities[at];
       });
       if (Object.keys(updates).length) Plotly.relayout(gd, updates);
     }
