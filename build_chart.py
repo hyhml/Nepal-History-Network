@@ -49,6 +49,7 @@ def load_data(data_dir: Path) -> dict[str, pd.DataFrame]:
         "sources.csv",
         "background_events.csv",
         "organization_stages.csv",
+        "organization_lanes.csv",
     ):
         if (data_dir / optional_name).is_file():
             file_names.append(optional_name)
@@ -72,6 +73,22 @@ def load_data(data_dir: Path) -> dict[str, pd.DataFrame]:
 def validate_references(frames: dict[str, pd.DataFrame]) -> None:
     people = set(frames["people"]["person_id"])
     organizations = set(frames["organizations"]["org_id"])
+
+    if "organization_lanes" in frames:
+        if "lane_id" not in frames["organizations"].columns:
+            raise ValueError(
+                "存在 organization_lanes.csv 时，organizations.csv 必须包含 lane_id"
+            )
+        if frames["organization_lanes"]["lane_id"].duplicated().any():
+            raise ValueError("organization_lanes.csv 含重复 lane_id")
+        if frames["organization_lanes"]["display_order"].duplicated().any():
+            raise ValueError("organization_lanes.csv 含重复 display_order")
+        lanes = set(frames["organization_lanes"]["lane_id"])
+        unknown_lanes = sorted(set(frames["organizations"]["lane_id"]) - lanes)
+        if unknown_lanes:
+            raise ValueError(
+                "organizations.csv 含未知 lane_id：" + str(unknown_lanes)
+            )
 
     for table_name in ("tenures", "events"):
         table = frames[table_name]
@@ -218,12 +235,25 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     relations = frames["organization_relations"].copy()
     backgrounds = frames.get("background_events", pd.DataFrame()).copy()
     stages = frames.get("organization_stages", pd.DataFrame()).copy()
+    lanes = frames.get("organization_lanes", pd.DataFrame()).copy()
 
     organizations["display_order"] = organizations["display_order"].astype(int)
     organizations = organizations.sort_values("display_order")
+    if lanes.empty:
+        display_lanes = organizations[
+            ["org_id", "short_name", "color", "display_order", "branch_note"]
+        ].rename(columns={"org_id": "lane_id"})
+        organizations["lane_id"] = organizations["org_id"]
+    else:
+        lanes["display_order"] = lanes["display_order"].astype(int)
+        display_lanes = lanes.sort_values("display_order")
     if "track" not in tenures.columns:
         tenures["track"] = "organization"
-    x_for_org = dict(zip(organizations["org_id"], organizations["display_order"]))
+    x_for_lane = dict(zip(display_lanes["lane_id"], display_lanes["display_order"]))
+    lane_for_org = dict(zip(organizations["org_id"], organizations["lane_id"]))
+    x_for_org = {
+        org_id: x_for_lane[lane_id] for org_id, lane_id in lane_for_org.items()
+    }
     color_for_org = dict(zip(organizations["org_id"], organizations["color"]))
     name_for_org = dict(zip(organizations["org_id"], organizations["name_zh"]))
     branch_note_for_org = dict(
@@ -268,11 +298,11 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     fig = go.Figure()
 
     # Party lanes make the organizational columns visually stable.
-    for org in organizations.itertuples(index=False):
+    for lane in display_lanes.itertuples(index=False):
         fig.add_vrect(
-            x0=org.display_order - 0.42,
-            x1=org.display_order + 0.42,
-            fillcolor=org.color,
+            x0=lane.display_order - 0.42,
+            x1=lane.display_order + 0.42,
+            fillcolor=lane.color,
             opacity=0.055,
             line_width=0,
             layer="below",
@@ -282,9 +312,8 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     # Boundaries are deliberately limited to that lane rather than spanning
     # the whole chart.
     if not stages.empty:
-        focus_stage_shape_indices: list[int] = []
-        focus_stage_annotation_indices: list[int] = []
-        focus_stage_person_ids: set[str] = set()
+        focus_stage_shapes: list[dict[str, object]] = []
+        focus_stage_annotations: list[dict[str, object]] = []
         for stage in stages.itertuples(index=False):
             lane_x = x_for_org[stage.org_id]
             x = lane_x + local_offset(stage)
@@ -293,9 +322,13 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 for value in str(getattr(stage, "related_person_ids", "")).split(";")
                 if value.strip()
             ]
-            focus_stage_person_ids.update(stage_person_ids)
             if str(stage.show_boundary).lower() == "yes":
-                focus_stage_shape_indices.append(len(fig.layout.shapes or []))
+                focus_stage_shapes.append(
+                    {
+                        "index": len(fig.layout.shapes or []),
+                        "related_person_ids": stage_person_ids,
+                    }
+                )
                 fig.add_shape(
                     type="line",
                     x0=lane_x - 0.42,
@@ -307,7 +340,12 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     layer="above",
                 )
             midpoint = stage.start_date + (stage.end_date - stage.start_date) / 2
-            focus_stage_annotation_indices.append(len(fig.layout.annotations or []))
+            focus_stage_annotations.append(
+                {
+                    "index": len(fig.layout.annotations or []),
+                    "related_person_ids": stage_person_ids,
+                }
+            )
             fig.add_annotation(
                 x=x,
                 y=midpoint,
@@ -322,9 +360,8 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             )
         fig.update_layout(
             meta={
-                "focus_stage_shape_indices": focus_stage_shape_indices,
-                "focus_stage_annotation_indices": focus_stage_annotation_indices,
-                "focus_stage_person_ids": sorted(focus_stage_person_ids),
+                "focus_stage_shapes": focus_stage_shapes,
+                "focus_stage_annotations": focus_stage_annotations,
             }
         )
 
@@ -499,9 +536,13 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             for side, note in (("起点", source_note), ("终点", target_note))
             if note
         )
+        source_x = x_for_org[relation.source_org_id]
+        target_x = x_for_org[relation.target_org_id]
+        if source_x == target_x:
+            continue
         fig.add_trace(
             go.Scatter(
-                x=[x_for_org[relation.source_org_id], x_for_org[relation.target_org_id]],
+                x=[source_x, target_x],
                 y=[relation.event_date, relation.event_date],
                 mode="lines+markers",
                 line={"color": "#7A5195", "width": 3, "dash": "dash"},
@@ -595,7 +636,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             )
 
     chart_height = max(1500, min(2400, 850 + len(events) * 13))
-    chart_width = max(1450, len(organizations) * 125 + 330)
+    chart_width = max(1450, len(display_lanes) * 125 + 330)
 
     fig.update_layout(
         title={"text": title, "x": 0.5},
@@ -614,17 +655,17 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         xaxis={
             "title": "党派／组织",
             "tickmode": "array",
-            "tickvals": organizations["display_order"].tolist(),
+            "tickvals": display_lanes["display_order"].tolist(),
             "ticktext": [
                 escape(row.short_name)
                 + (
                     f"<br><span style='font-size:11px;color:#64748b'>〔{escape(row.branch_note)}〕</span>"
                     if getattr(row, "branch_note", "") else ""
                 )
-                for row in organizations.itertuples(index=False)
+                for row in display_lanes.itertuples(index=False)
             ],
             "tickangle": -50,
-            "range": [organizations["display_order"].min() - 0.6, organizations["display_order"].max() + 0.6],
+            "range": [display_lanes["display_order"].min() - 0.6, display_lanes["display_order"].max() + 0.6],
             "side": "top",
             "showgrid": True,
             "gridcolor": "#D9D9D9",
@@ -663,7 +704,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   let hovered = null;
   let compareMode = false;
   let lastOpacitySignature = traceIndices.map(i => gd.data[i].opacity == null ? 1 : gd.data[i].opacity).join(',');
-  let lastStageOpacity = 0.24;
+  let lastStageSignature = '';
   const stageMeta = gd.layout.meta || {};
   const initialXRange = Array.isArray(gd.layout.xaxis.range) ? gd.layout.xaxis.range.slice() : null;
   const initialYRange = Array.isArray(gd.layout.yaxis.range) ? gd.layout.yaxis.range.slice() : null;
@@ -735,13 +776,20 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       lastOpacitySignature = signature;
       Plotly.restyle(gd, {opacity}, traceIndices);
     }
-    const stageOpacity = !focus.length ? 0.24 :
-      (focus.some(id => (stageMeta.focus_stage_person_ids || []).includes(id)) ? 1 : 0.07);
-    if (stageOpacity !== lastStageOpacity) {
-      lastStageOpacity = stageOpacity;
+    const stageOpacity = item => !focus.length ? 0.24 :
+      (focus.some(id => (item.related_person_ids || []).includes(id)) ? 1 : 0.07);
+    const stageShapeOpacities = (stageMeta.focus_stage_shapes || []).map(stageOpacity);
+    const stageAnnotationOpacities = (stageMeta.focus_stage_annotations || []).map(stageOpacity);
+    const stageSignature = stageShapeOpacities.concat(stageAnnotationOpacities).join(',');
+    if (stageSignature !== lastStageSignature) {
+      lastStageSignature = stageSignature;
       const updates = {};
-      for (const i of stageMeta.focus_stage_shape_indices || []) updates[`shapes[${i}].opacity`] = stageOpacity;
-      for (const i of stageMeta.focus_stage_annotation_indices || []) updates[`annotations[${i}].opacity`] = stageOpacity;
+      (stageMeta.focus_stage_shapes || []).forEach((item, at) => {
+        updates[`shapes[${item.index}].opacity`] = stageShapeOpacities[at];
+      });
+      (stageMeta.focus_stage_annotations || []).forEach((item, at) => {
+        updates[`annotations[${item.index}].opacity`] = stageAnnotationOpacities[at];
+      });
       if (Object.keys(updates).length) Plotly.relayout(gd, updates);
     }
     if (selected.length) {

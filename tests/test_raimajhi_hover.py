@@ -190,6 +190,63 @@ class RaimajhiHoverTest(unittest.TestCase):
         ]
         self.assertLessEqual(len(transition_traces), len(self.frames["people"]))
 
+    def test_six_lineages_share_display_lanes_without_merging_data(self):
+        organizations = self.frames["organizations"].set_index("org_id")
+        expected_groups = {
+            "lane_rohit": {
+                "nepal_workers_peasants_org",
+                "nepal_workers_peasants_party",
+            },
+            "lane_manandhar": {"ncp_manandhar", "ncp_united_1991"},
+            "lane_prachanda": {
+                "ncp_unity_centre_prachanda",
+                "ncp_maoist",
+                "unified_ncp_maoist",
+            },
+            "lane_pradhan": {"ncp_pushpa_lal", "ncp_marxist"},
+            "lane_bhandari": {"liberation_front_group", "ncp_ml"},
+            "lane_narayan_kaji": {
+                "ncp_unity_centre",
+                "ncp_unity_centre_masal",
+            },
+        }
+        self.assertEqual(len(self.frames["organization_lanes"]), 23)
+        self.assertEqual(len(self.figure.layout.xaxis.tickvals), 23)
+        for lane_id, org_ids in expected_groups.items():
+            self.assertEqual(
+                set(organizations.loc[list(org_ids), "lane_id"]), {lane_id}
+            )
+            self.assertEqual(
+                len({organizations.loc[org_id, "name_zh"] for org_id in org_ids}),
+                len(org_ids),
+            )
+
+    def test_lineage_stages_keep_person_specific_focus_metadata(self):
+        stages = self.frames["organization_stages"]
+        self.assertEqual(len(stages), 19)
+        labels = set(stages["label"])
+        self.assertTrue(
+            {
+                "尼泊尔工农党",
+                "尼共（民主派）",
+                "统一尼共（毛）",
+                "尼共（马）",
+                "尼共（马列）",
+                "尼共（团结中心—Masal）",
+                "尼共（团结中心）（纳拉扬·卡吉派）",
+            }
+            <= labels
+        )
+        meta = self.figure.layout.meta
+        self.assertEqual(len(meta["focus_stage_annotations"]), len(stages))
+        self.assertTrue(
+            all("related_person_ids" in item for item in meta["focus_stage_annotations"])
+        )
+
+        script = build_focus_post_script(self.frames["people"])
+        self.assertIn("item.related_person_ids", script)
+        self.assertIn("focus_stage_annotations", script)
+
     def test_prachanda_is_the_default_focus(self):
         script = build_focus_post_script(self.frames["people"])
         self.assertIn("const defaultSelection = ['prachanda'];", script)
