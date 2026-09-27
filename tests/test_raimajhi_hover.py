@@ -267,6 +267,13 @@ class RaimajhiHoverTest(unittest.TestCase):
     def test_prachanda_is_the_default_focus(self):
         script = build_focus_post_script(self.frames["people"])
         self.assertIn("const defaultSelection = ['prachanda'];", script)
+        self.assertIn("? 1 : 0.35", script)
+        self.assertNotIn("0.07", script)
+        for trace in self.figure.data:
+            if trace.name == "政治背景" or trace.name == "政治背景时期":
+                self.assertEqual(trace.opacity, 0.16)
+            elif trace.opacity is not None:
+                self.assertEqual(trace.opacity, 0.35)
         self.assertIn("function resetToDefault() { resetViewAndControls(defaultSelection); }", script)
         self.assertIn("function showAllPeople()", script)
 

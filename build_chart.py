@@ -382,7 +382,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     y0=stage.start_date,
                     y1=stage.start_date,
                     line={"color": "#555", "width": 2, "dash": "dash"},
-                    opacity=0.24,
+                    opacity=0.35,
                     layer="above",
                 )
             midpoint = stage.start_date + (stage.end_date - stage.start_date) / 2
@@ -401,7 +401,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 bordercolor="rgba(85,85,85,0.35)",
                 borderwidth=1,
                 borderpad=3,
-                opacity=0.24,
+                opacity=0.35,
                 font={"size": 13, "color": "#333"},
             )
         fig.update_layout(
@@ -440,7 +440,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 bordercolor="rgba(122,81,149,0.45)",
                 borderwidth=1,
                 borderpad=2,
-                opacity=0.24,
+                opacity=0.35,
                 font={"size": 11, "color": "#6b477d"},
             )
     fig.update_layout(
@@ -561,7 +561,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 name=full_name_for_person.get(tenure.person_id, person_name),
                 legendgroup=tenure.person_id,
                 showlegend=False,
-                opacity=0.24,
+                opacity=0.35,
                 meta={"person_id": tenure.person_id},
             )
         )
@@ -599,7 +599,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     text=transition_text,
                     hovertemplate="%{text}",
                     showlegend=False,
-                    opacity=0.24,
+                    opacity=0.35,
                     meta={"person_id": person_id},
                 )
             )
@@ -646,7 +646,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 name="组织分合",
                 legendgroup="organization-relations",
                 showlegend=False,
-                opacity=0.24,
+                opacity=0.35,
                 meta={"related_person_ids": related_person_ids},
             )
         )
@@ -690,7 +690,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     name=full_name_for_person.get(person_id, name_for_person[person_id]),
                     legendgroup=person_id,
                     showlegend=False,
-                    opacity=0.24,
+                    opacity=0.35,
                     meta={"person_id": person_id},
                 )
             )
@@ -849,10 +849,10 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   function traceOpacity(i) {
     const meta = gd.data[i].meta || {};
     const focus = selected.length ? selected : (hovered ? [hovered] : []);
-    if (meta.person_id) return focus.length ? (focus.includes(meta.person_id) ? 1 : 0.07) : 0.24;
+    if (meta.person_id) return focus.length ? (focus.includes(meta.person_id) ? 1 : 0.35) : 0.35;
     if (Array.isArray(meta.related_person_ids)) {
-      if (!focus.length) return 0.24;
-      return focus.some(id => meta.related_person_ids.includes(id)) ? 1 : 0.07;
+      if (!focus.length) return 0.35;
+      return focus.some(id => meta.related_person_ids.includes(id)) ? 1 : 0.35;
     }
     return 1;
   }
@@ -864,8 +864,8 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       lastOpacitySignature = signature;
       Plotly.restyle(gd, {opacity}, traceIndices);
     }
-    const stageOpacity = item => !focus.length ? 0.24 :
-      (focus.some(id => (item.related_person_ids || []).includes(id)) ? 1 : 0.07);
+    const stageOpacity = item => !focus.length ? 0.35 :
+      (focus.some(id => (item.related_person_ids || []).includes(id)) ? 1 : 0.35);
     const stageShapeOpacities = (stageMeta.focus_stage_shapes || []).map(stageOpacity);
     const stageAnnotationOpacities = (stageMeta.focus_stage_annotations || []).map(stageOpacity);
     const branchAnnotationOpacities = (stageMeta.focus_branch_annotations || []).map(stageOpacity);
