@@ -10,7 +10,7 @@
   },
   {
     "id": "raimajhi-life-full",
-    "title": "尼泊尔五位人物的本地原文数据",
+    "title": "尼泊尔二十一位人物的本地原文数据",
     "kind": "datasets",
     "scope": "local",
     "path": "materials/local/datasets/raimajhi-life",
@@ -18,7 +18,7 @@
   },
   {
     "id": "raimajhi-life-example",
-    "title": "尼泊尔五位人物结构化示例",
+    "title": "尼泊尔二十一位人物结构化示例",
     "kind": "datasets",
     "scope": "tracked",
     "path": "examples/raimajhi-life",

@@ -446,24 +446,33 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         ["person_id", "track"]
     ):
         rows = list(group.itertuples(index=False))
+        transition_x: list[float | None] = []
+        transition_y: list[pd.Timestamp | None] = []
+        transition_text: list[str | None] = []
         for previous, current in zip(rows, rows[1:]):
             if previous.org_id == current.org_id:
                 continue
             if (current.start_date - previous.end_date).days > 366:
                 continue
+            hover = (
+                f"<b>{full_name_for_person.get(person_id, name_for_person[person_id])}</b>"
+                "<br>组织转移："
+                f"{name_for_org[previous.org_id]} → {name_for_org[current.org_id]}"
+                "<extra></extra>"
+            )
+            transition_x.extend([person_x(previous), person_x(current), None])
+            transition_y.extend([previous.end_date, current.start_date, None])
+            transition_text.extend([hover, hover, None])
+        if transition_x:
             transition_color = person_color_for.get(person_id, "#555")
             fig.add_trace(
                 go.Scatter(
-                    x=[person_x(previous), person_x(current)],
-                    y=[previous.end_date, current.start_date],
+                    x=transition_x,
+                    y=transition_y,
                     mode="lines",
                     line={"color": transition_color, "width": 2, "dash": "dot"},
-                    hovertemplate=(
-                    f"<b>{full_name_for_person.get(person_id, name_for_person[person_id])}</b>"
-                    "<br>组织转移："
-                        f"{name_for_org[previous.org_id]} → {name_for_org[current.org_id]}"
-                        "<extra></extra>"
-                    ),
+                    text=transition_text,
+                    hovertemplate="%{text}",
                     showlegend=False,
                     opacity=0.24,
                     meta={"person_id": person_id},

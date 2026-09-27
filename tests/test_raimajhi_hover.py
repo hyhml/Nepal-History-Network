@@ -22,6 +22,16 @@ FIRST_BATCH = {
     "bishnu_manandhar",
     "krishna_raj_burma",
 }
+SECOND_BATCH = {
+    "narayan_man_bijukchhe",
+    "shambhu_ram_shrestha",
+    "dina_nath_sharma",
+    "narayan_kaji_shrestha",
+    "niranjan_govinda_vaidya",
+    "madhav_kumar_nepal",
+    "ram_bahadur_thapa",
+    "chandra_prasad_gajurel",
+}
 
 
 class RaimajhiHoverTest(unittest.TestCase):
@@ -94,7 +104,7 @@ class RaimajhiHoverTest(unittest.TestCase):
 
     def test_first_batch_has_people_events_tenures_and_focus_entries(self):
         person_ids = set(self.frames["people"]["person_id"])
-        self.assertEqual(len(person_ids), 13)
+        self.assertEqual(len(person_ids), 21)
         self.assertTrue(FIRST_BATCH <= person_ids)
 
         for table_name in ("events", "tenures"):
@@ -103,6 +113,18 @@ class RaimajhiHoverTest(unittest.TestCase):
 
         script = build_focus_post_script(self.frames["people"])
         for person_id in FIRST_BATCH:
+            self.assertIn(f'"id": "{person_id}"', script)
+
+    def test_second_batch_has_people_events_tenures_and_focus_entries(self):
+        person_ids = set(self.frames["people"]["person_id"])
+        self.assertTrue(SECOND_BATCH <= person_ids)
+
+        for table_name in ("events", "tenures"):
+            represented = set(self.frames[table_name]["person_id"])
+            self.assertTrue(SECOND_BATCH <= represented)
+
+        script = build_focus_post_script(self.frames["people"])
+        for person_id in SECOND_BATCH:
             self.assertIn(f'"id": "{person_id}"', script)
 
     def test_first_batch_organization_paths_are_present(self):
@@ -134,6 +156,39 @@ class RaimajhiHoverTest(unittest.TestCase):
                 if source_id.strip()
             }
             self.assertFalse(used_sources - known_sources, table_name)
+
+    def test_second_batch_paths_and_similar_names_stay_distinct(self):
+        relation_ids = set(self.frames["organization_relations"]["relation_id"])
+        self.assertTrue(
+            {
+                "relation_pushpa_workers_org",
+                "relation_workers_org_party",
+                "relation_ncp_central_nucleus",
+                "relation_masal_sharma",
+                "relation_sharma_maoist",
+                "relation_people_front_vaidya",
+                "relation_unity_masal_unified",
+                "relation_maoist_unified",
+            }
+            <= relation_ids
+        )
+        niranjan_orgs = set(
+            self.frames["events"].loc[
+                self.frames["events"]["person_id"] == "niranjan_govinda_vaidya",
+                "org_id",
+            ]
+        )
+        self.assertNotIn("ncp_fourth_congress", niranjan_orgs)
+        self.assertNotEqual("niranjan_govinda_vaidya", "mohan_vaidya")
+
+        transition_traces = [
+            trace
+            for trace in self.figure.data
+            if isinstance(trace.meta, dict)
+            and trace.meta.get("person_id")
+            and trace.mode == "lines"
+        ]
+        self.assertLessEqual(len(transition_traces), len(self.frames["people"]))
 
     def test_prachanda_is_the_default_focus(self):
         script = build_focus_post_script(self.frames["people"])
