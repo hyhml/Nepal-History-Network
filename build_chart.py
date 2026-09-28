@@ -874,6 +874,15 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "organization_lane_people": lane_people,
             "organization_lane_options": lane_options,
             "organization_lane_axis_ids": display_lanes["lane_id"].tolist(),
+            "organization_lane_hit_ids": [
+                lane_id for lane_id in display_lanes["lane_id"]
+                if lane_id != "lane_background"
+            ],
+            "organization_lane_hit_centers": {
+                row.lane_id: row.display_order
+                for row in display_lanes.itertuples(index=False)
+                if row.lane_id != "lane_background"
+            },
         }
     )
     return fig
@@ -908,6 +917,8 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   const lanePeople = stageMeta.organization_lane_people || {};
   const laneOptions = stageMeta.organization_lane_options || [];
   const axisLaneIds = stageMeta.organization_lane_axis_ids || [];
+  const laneHitIds = stageMeta.organization_lane_hit_ids || [];
+  const laneHitCenters = stageMeta.organization_lane_hit_centers || {};
   const initialXRange = Array.isArray(gd.layout.xaxis.range) ? gd.layout.xaxis.range.slice() : null;
   const initialYRange = Array.isArray(gd.layout.yaxis.range) ? gd.layout.yaxis.range.slice() : null;
 
@@ -1099,6 +1110,28 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     update();
   });
   gd.on('plotly_unhover', () => { hovered = null; update(); });
+  function laneIdFromHitPoint(point) {
+    if (!point) return null;
+    let id = point.customdata;
+    if (Array.isArray(id)) id = id[0];
+    if (typeof id === 'string' && laneOptions.some(lane => lane.id === id)) return id;
+    const x = Number(point.x);
+    if (Number.isFinite(x)) {
+      let nearest = null;
+      let distance = Infinity;
+      for (const candidate of laneHitIds) {
+        const delta = Math.abs(x - Number(laneHitCenters[candidate]));
+        if (delta < distance) { nearest = candidate; distance = delta; }
+      }
+      if (nearest && distance <= 0.421) return nearest;
+    }
+    const pointNumber = Number(point.pointNumber);
+    if (Number.isInteger(pointNumber) && pointNumber >= 0) {
+      const candidate = laneHitIds[Math.floor(pointNumber / 6)];
+      if (candidate) return candidate;
+    }
+    return null;
+  }
   gd.on('plotly_click', eventData => {
     const points = eventData.points || [];
     const personPoint = points.find(point => {
@@ -1111,7 +1144,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     });
     const lanePoint = points.find(point => {
       const trace = gd.data[point.curveNumber];
-      return trace && trace.meta && trace.meta.organization_lane_hit_area && point.customdata;
+      return trace && trace.meta && trace.meta.organization_lane_hit_area && laneIdFromHitPoint(point);
     });
     if (personPoint) {
       const trace = gd.data[personPoint.curveNumber];
@@ -1119,7 +1152,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     } else if (relationPoint) {
       // Preserve organization split/merge line behavior; it is not a lane hit.
     } else if (lanePoint) {
-      const laneId = lanePoint.customdata;
+      const laneId = laneIdFromHitPoint(lanePoint);
       setSelectedLane(selectedLane === laneId ? null : laneId);
     } else {
       const point = points[0];
