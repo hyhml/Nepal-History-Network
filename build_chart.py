@@ -402,6 +402,9 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     fig = go.Figure()
 
     # Party lanes make the organizational columns visually stable.
+    lane_hit_x: list[float | None] = []
+    lane_hit_y: list[pd.Timestamp | None] = []
+    lane_hit_ids: list[str | None] = []
     for lane in display_lanes.itertuples(index=False):
         fig.add_vrect(
             x0=lane.display_order - 0.42,
@@ -410,6 +413,36 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             opacity=0.055,
             line_width=0,
             layer="below",
+        )
+        if lane.lane_id != "lane_background":
+            lane_hit_x.extend([
+                lane.display_order - 0.42, lane.display_order + 0.42,
+                lane.display_order + 0.42, lane.display_order - 0.42,
+                lane.display_order - 0.42, None,
+            ])
+            lane_hit_y.extend([
+                min(all_dates), min(all_dates), max(all_dates),
+                max(all_dates), min(all_dates), None,
+            ])
+            lane_hit_ids.extend([lane.lane_id] * 5 + [None])
+    if lane_hit_x:
+        # One transparent filled trace provides full-column click targets,
+        # behind all visible data. Visible person/relation traces keep priority.
+        fig.add_trace(
+            go.Scatter(
+                x=lane_hit_x,
+                y=lane_hit_y,
+                customdata=lane_hit_ids,
+                mode="none",
+                fill="toself",
+                fillcolor="rgba(0,0,0,0.001)",
+                line={"width": 0},
+                hoveron="fills",
+                hovertemplate="<extra></extra>",
+                name="选择组织列",
+                showlegend=False,
+                meta={"organization_lane_hit_area": True},
+            )
         )
 
     # Stage labels divide multiple successor organizations drawn in one lane.
@@ -440,7 +473,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     y0=stage.start_date,
                     y1=stage.start_date,
                     line={"color": "#555", "width": 2, "dash": "dash"},
-                    opacity=0.30,
+                    opacity=0.20,
                     layer="above",
                 )
             midpoint = stage.start_date + (stage.end_date - stage.start_date) / 2
@@ -459,7 +492,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 bordercolor="rgba(85,85,85,0.35)",
                 borderwidth=1,
                 borderpad=3,
-                opacity=0.30,
+                opacity=0.20,
                 font={"size": 13, "color": "#333"},
             )
         fig.update_layout(
@@ -498,7 +531,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 bordercolor="rgba(122,81,149,0.45)",
                 borderwidth=1,
                 borderpad=2,
-                opacity=0.30,
+                opacity=0.20,
                 font={"size": 11, "color": "#6b477d"},
             )
     fig.update_layout(
@@ -609,7 +642,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 name=full_name_for_person.get(tenure.person_id, person_name),
                 legendgroup=tenure.person_id,
                 showlegend=False,
-                opacity=0.30,
+                opacity=0.20,
                 meta={"person_id": tenure.person_id},
             )
         )
@@ -647,7 +680,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     text=transition_text,
                     hovertemplate="%{text}",
                     showlegend=False,
-                    opacity=0.30,
+                    opacity=0.20,
                     meta={"person_id": person_id},
                 )
             )
@@ -693,7 +726,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 name="组织分合",
                 legendgroup="organization-relations",
                 showlegend=False,
-                opacity=0.30,
+                opacity=0.20,
                 meta={"related_person_ids": related_person_ids},
             )
         )
@@ -745,7 +778,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     name=full_name_for_person.get(person_id, name_for_person[person_id]),
                     legendgroup=person_id,
                     showlegend=False,
-                    opacity=0.30,
+                    opacity=0.20,
                     meta={"person_id": person_id},
                 )
             )
@@ -901,9 +934,9 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       <li>开启比较模式后，单击可增删对比人物</li>
       <li>按 Esc：恢复默认聚焦普拉昌达和初始视图</li>
       <li>点“全部人物”：取消人物聚焦</li>
-      <li>点击图顶端的组织列名，或使用下拉框：聚焦该列人物</li>
+      <li>点击组织列名或列内空白色带，或使用下拉框：聚焦该列人物</li>
     </ul>
-    <small>组织成员为 60%，选中人物为 100%，其他人物为 30%。</small>
+    <small>组织成员为 60%，选中人物为 100%，其他人物为 20%。点到人物或关系线时仍由其自身交互响应。</small>
   `;
   const style = document.createElement('style');
   style.textContent = `
@@ -942,13 +975,13 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   function opacityForPerson(id) {
     if (selected.includes(id) || hovered === id) return 1;
     if (selectedLane && (lanePeople[selectedLane] || []).includes(id)) return 0.6;
-    return 0.3;
+    return 0.2;
   }
   function opacityForRelated(ids) {
-    if (!ids || !ids.length) return 0.3;
+    if (!ids || !ids.length) return 0.2;
     if (ids.some(id => selected.includes(id) || hovered === id)) return 1;
     if (selectedLane && ids.some(id => (lanePeople[selectedLane] || []).includes(id))) return 0.6;
-    return 0.3;
+    return 0.2;
   }
   function traceOpacity(i) {
     const meta = gd.data[i].meta || {};
@@ -991,7 +1024,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     } else if (selectedLane) {
       status.textContent = '组织 60%：' + (laneOptions.find(l => l.id === selectedLane) || {}).name;
     } else {
-      status.textContent = '当前：全部人物（30%）';
+      status.textContent = '当前：全部人物（20%）';
     }
   }
   function setSelectedLane(id) {
@@ -1067,9 +1100,32 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   });
   gd.on('plotly_unhover', () => { hovered = null; update(); });
   gd.on('plotly_click', eventData => {
-    const point = eventData.points && eventData.points[0];
-    const trace = point && gd.data[point.curveNumber];
-    togglePerson(trace && trace.meta ? trace.meta.person_id : null, Boolean(gd.__focusShiftClick));
+    const points = eventData.points || [];
+    const personPoint = points.find(point => {
+      const trace = gd.data[point.curveNumber];
+      return trace && trace.meta && trace.meta.person_id;
+    });
+    const relationPoint = points.find(point => {
+      const trace = gd.data[point.curveNumber];
+      return trace && trace.meta && Array.isArray(trace.meta.related_person_ids);
+    });
+    const lanePoint = points.find(point => {
+      const trace = gd.data[point.curveNumber];
+      return trace && trace.meta && trace.meta.organization_lane_hit_area && point.customdata;
+    });
+    if (personPoint) {
+      const trace = gd.data[personPoint.curveNumber];
+      togglePerson(trace.meta.person_id, Boolean(gd.__focusShiftClick));
+    } else if (relationPoint) {
+      // Preserve organization split/merge line behavior; it is not a lane hit.
+    } else if (lanePoint) {
+      const laneId = lanePoint.customdata;
+      setSelectedLane(selectedLane === laneId ? null : laneId);
+    } else {
+      const point = points[0];
+      const trace = point && gd.data[point.curveNumber];
+      togglePerson(trace && trace.meta ? trace.meta.person_id : null, Boolean(gd.__focusShiftClick));
+    }
     gd.__focusShiftClick = false;
   });
   update();
