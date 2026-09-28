@@ -440,7 +440,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     y0=stage.start_date,
                     y1=stage.start_date,
                     line={"color": "#555", "width": 2, "dash": "dash"},
-                    opacity=0.35,
+                    opacity=0.30,
                     layer="above",
                 )
             midpoint = stage.start_date + (stage.end_date - stage.start_date) / 2
@@ -459,7 +459,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 bordercolor="rgba(85,85,85,0.35)",
                 borderwidth=1,
                 borderpad=3,
-                opacity=0.35,
+                opacity=0.30,
                 font={"size": 13, "color": "#333"},
             )
         fig.update_layout(
@@ -498,7 +498,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 bordercolor="rgba(122,81,149,0.45)",
                 borderwidth=1,
                 borderpad=2,
-                opacity=0.35,
+                opacity=0.30,
                 font={"size": 11, "color": "#6b477d"},
             )
     fig.update_layout(
@@ -609,7 +609,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 name=full_name_for_person.get(tenure.person_id, person_name),
                 legendgroup=tenure.person_id,
                 showlegend=False,
-                opacity=0.35,
+                opacity=0.30,
                 meta={"person_id": tenure.person_id},
             )
         )
@@ -647,7 +647,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     text=transition_text,
                     hovertemplate="%{text}",
                     showlegend=False,
-                    opacity=0.35,
+                    opacity=0.30,
                     meta={"person_id": person_id},
                 )
             )
@@ -693,7 +693,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 name="组织分合",
                 legendgroup="organization-relations",
                 showlegend=False,
-                opacity=0.35,
+                opacity=0.30,
                 meta={"related_person_ids": related_person_ids},
             )
         )
@@ -745,7 +745,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     name=full_name_for_person.get(person_id, name_for_person[person_id]),
                     legendgroup=person_id,
                     showlegend=False,
-                    opacity=0.35,
+                    opacity=0.30,
                     meta={"person_id": person_id},
                 )
             )
@@ -818,6 +818,31 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "gridcolor": "#EAEAEA",
         },
     )
+    lane_people: dict[str, list[str]] = {}
+    for org_id, lane_id in lane_for_org.items():
+        members = set(tenures.loc[tenures["org_id"] == org_id, "person_id"])
+        if not events.empty:
+            members.update(events.loc[events["org_id"] == org_id, "person_id"])
+        lane_people.setdefault(lane_id, []).extend(members)
+    lane_people = {lane_id: sorted(set(ids)) for lane_id, ids in lane_people.items()}
+    lane_options = [
+        {"id": row.lane_id, "name": row.short_name, "kind": "main"}
+        for row in display_lanes.itertuples(index=False)
+        if row.lane_id != "lane_background"
+    ]
+    if not lanes.empty:
+        lane_options.extend(
+            {"id": row.lane_id, "name": f"{row.short_name}〔支线〕", "kind": "branch"}
+            for row in lanes[lanes["lane_type"] == "branch"].itertuples(index=False)
+        )
+    fig.update_layout(
+        meta={
+            **(fig.layout.meta or {}),
+            "organization_lane_people": lane_people,
+            "organization_lane_options": lane_options,
+            "organization_lane_axis_ids": display_lanes["lane_id"].tolist(),
+        }
+    )
     return fig
 
 
@@ -842,10 +867,14 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   const defaultSelection = ['prachanda'];
   const selected = defaultSelection.slice();
   let hovered = null;
+  let selectedLane = null;
   let compareMode = false;
   let lastOpacitySignature = traceIndices.map(i => gd.data[i].opacity == null ? 1 : gd.data[i].opacity).join(',');
   let lastStageSignature = '';
   const stageMeta = gd.layout.meta || {};
+  const lanePeople = stageMeta.organization_lane_people || {};
+  const laneOptions = stageMeta.organization_lane_options || [];
+  const axisLaneIds = stageMeta.organization_lane_axis_ids || [];
   const initialXRange = Array.isArray(gd.layout.xaxis.range) ? gd.layout.xaxis.range.slice() : null;
   const initialYRange = Array.isArray(gd.layout.yaxis.range) ? gd.layout.yaxis.range.slice() : null;
 
@@ -853,6 +882,8 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   rail.id = 'person-focus-rail';
   rail.innerHTML = `
     <h3>人物聚焦</h3>
+    <label for="organization-focus-select">选择组织列</label>
+    <select id="organization-focus-select"><option value="">不选择组织列</option></select>
     <label for="person-focus-search">搜索并聚焦</label>
     <input id="person-focus-search" type="search" list="person-focus-options" placeholder="输入人物姓名…" autocomplete="off">
     <datalist id="person-focus-options"></datalist>
@@ -870,8 +901,9 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       <li>开启比较模式后，单击可增删对比人物</li>
       <li>按 Esc：恢复默认聚焦普拉昌达和初始视图</li>
       <li>点“全部人物”：取消人物聚焦</li>
+      <li>点击图顶端的组织列名，或使用下拉框：聚焦该列人物</li>
     </ul>
-    <small>人物轨迹按组织列共用位置显示；被选人物的事件与任职会同步高亮。</small>
+    <small>组织成员为 60%，选中人物为 100%，其他人物为 30%。</small>
   `;
   const style = document.createElement('style');
   style.textContent = `
@@ -879,12 +911,14 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     #person-focus-rail h3 { margin: 0 0 12px; font-size: 18px; } #person-focus-rail h4 { margin: 12px 0 4px; font-size: 14px; }
     #person-focus-rail label { display: block; margin-bottom: 5px; font-weight: 600; }
     #person-focus-search { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #b9c2ca; border-radius: 6px; font-size: 14px; }
+    #organization-focus-select { width: 100%; box-sizing: border-box; margin: 0 0 10px; padding: 8px; border: 1px solid #b9c2ca; border-radius: 6px; background: white; font-size: 14px; }
     #person-focus-rail .focus-buttons { display: flex; gap: 6px; margin-top: 8px; }
     #person-focus-rail button { flex: 1; padding: 7px 5px; border: 1px solid #aeb8c2; border-radius: 6px; background: #f7f9fb; cursor: pointer; color: #263238; }
     #person-focus-rail button:hover, #person-focus-rail button[aria-pressed="true"] { background: #e4eef8; border-color: #4c78a8; }
     #focus-status { margin-top: 10px; padding: 7px; border-radius: 5px; background: #f0f3f5; font-size: 12px; }
     #person-focus-rail ul { margin: 5px 0 12px; padding-left: 18px; } #person-focus-rail li { margin: 4px 0; }
     #person-focus-rail small { display: block; color: #59636e; }
+    #temporal_network .xaxislayer-above .xtick { cursor: pointer; }
     @media (max-width: 900px) { #person-focus-rail { top: auto; right: 8px; bottom: 8px; width: 230px; max-height: 55vh; } }
   `;
   document.head.appendChild(style);
@@ -893,31 +927,43 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   const options = rail.querySelector('#person-focus-options');
   const status = rail.querySelector('#focus-status');
   const compareButton = rail.querySelector('#compare-toggle');
+  const laneSelect = rail.querySelector('#organization-focus-select');
   for (const p of people) {
     const option = document.createElement('option'); option.value = p.name; options.appendChild(option);
   }
+  for (const lane of laneOptions) {
+    const option = document.createElement('option');
+    option.value = lane.id;
+    option.textContent = lane.name;
+    laneSelect.appendChild(option);
+  }
 
   function personFromName(value) { const p = people.find(item => item.name === value || item.id === value); return p ? p.id : null; }
+  function opacityForPerson(id) {
+    if (selected.includes(id) || hovered === id) return 1;
+    if (selectedLane && (lanePeople[selectedLane] || []).includes(id)) return 0.6;
+    return 0.3;
+  }
+  function opacityForRelated(ids) {
+    if (!ids || !ids.length) return 0.3;
+    if (ids.some(id => selected.includes(id) || hovered === id)) return 1;
+    if (selectedLane && ids.some(id => (lanePeople[selectedLane] || []).includes(id))) return 0.6;
+    return 0.3;
+  }
   function traceOpacity(i) {
     const meta = gd.data[i].meta || {};
-    const focus = selected.length ? selected : (hovered ? [hovered] : []);
-    if (meta.person_id) return focus.length ? (focus.includes(meta.person_id) ? 1 : 0.35) : 0.35;
-    if (Array.isArray(meta.related_person_ids)) {
-      if (!focus.length) return 0.35;
-      return focus.some(id => meta.related_person_ids.includes(id)) ? 1 : 0.35;
-    }
+    if (meta.person_id) return opacityForPerson(meta.person_id);
+    if (Array.isArray(meta.related_person_ids)) return opacityForRelated(meta.related_person_ids);
     return 1;
   }
   function update() {
-    const focus = selected.length ? selected : (hovered ? [hovered] : []);
     const opacity = traceIndices.map(traceOpacity);
     const signature = opacity.join(',');
     if (signature !== lastOpacitySignature) {
       lastOpacitySignature = signature;
       Plotly.restyle(gd, {opacity}, traceIndices);
     }
-    const stageOpacity = item => !focus.length ? 0.35 :
-      (focus.some(id => (item.related_person_ids || []).includes(id)) ? 1 : 0.35);
+    const stageOpacity = item => opacityForRelated(item.related_person_ids || []);
     const stageShapeOpacities = (stageMeta.focus_stage_shapes || []).map(stageOpacity);
     const stageAnnotationOpacities = (stageMeta.focus_stage_annotations || []).map(stageOpacity);
     const branchAnnotationOpacities = (stageMeta.focus_branch_annotations || []).map(stageOpacity);
@@ -937,12 +983,21 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       if (Object.keys(updates).length) Plotly.relayout(gd, updates);
     }
     if (selected.length) {
-      status.textContent = '已锁定：' + selected.map(id => people.find(p => p.id === id).name).join('；');
+      status.textContent = '人物 100%：' + selected.map(id => people.find(p => p.id === id).name).join('；') +
+        (selectedLane ? '；组织 60%：' + (laneOptions.find(l => l.id === selectedLane) || {}).name : '');
     } else if (hovered) {
-      status.textContent = '预览：' + people.find(p => p.id === hovered).name;
+      status.textContent = '人物 100%：' + people.find(p => p.id === hovered).name +
+        (selectedLane ? '；组织 60%：' + (laneOptions.find(l => l.id === selectedLane) || {}).name : '');
+    } else if (selectedLane) {
+      status.textContent = '组织 60%：' + (laneOptions.find(l => l.id === selectedLane) || {}).name;
     } else {
-      status.textContent = '当前：全部人物（淡显）';
+      status.textContent = '当前：全部人物（30%）';
     }
+  }
+  function setSelectedLane(id) {
+    selectedLane = id || null;
+    laneSelect.value = selectedLane || '';
+    update();
   }
   function togglePerson(id, shift) {
     if (!id) return;
@@ -957,10 +1012,14 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     }
     update();
   }
-  function resetViewAndControls(nextSelection) {
+  function resetViewAndControls(nextSelection, clearLane = true) {
     selected.splice(0, selected.length, ...nextSelection);
     hovered = null;
     compareMode = false;
+    if (clearLane) {
+      selectedLane = null;
+      laneSelect.value = '';
+    }
     search.value = '';
     compareButton.textContent = '比较模式：关';
     compareButton.setAttribute('aria-pressed', 'false');
@@ -975,12 +1034,13 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   }
   function resetToDefault() { resetViewAndControls(defaultSelection); }
   function showAllPeople() {
-    resetViewAndControls([]);
+    resetViewAndControls([], false);
   }
   search.addEventListener('change', () => {
     const id = personFromName(search.value);
     if (id) { selected.splice(0, selected.length, id); update(); }
   });
+  laneSelect.addEventListener('change', () => setSelectedLane(laneSelect.value));
   rail.querySelector('#focus-reset').addEventListener('click', showAllPeople);
   compareButton.addEventListener('click', () => {
     compareMode = !compareMode;
@@ -991,6 +1051,14 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     if (event.key === 'Escape') { event.preventDefault(); resetToDefault(); }
   });
   gd.addEventListener('click', event => { gd.__focusShiftClick = event.shiftKey; }, true);
+  gd.addEventListener('click', event => {
+    const tick = event.target && event.target.closest ? event.target.closest('.xaxislayer-above .xtick') : null;
+    if (!tick) return;
+    const ticks = Array.from(gd.querySelectorAll('.xaxislayer-above .xtick'));
+    const index = ticks.indexOf(tick);
+    const laneId = axisLaneIds[index];
+    if (laneId && laneOptions.some(item => item.id === laneId)) setSelectedLane(selectedLane === laneId ? null : laneId);
+  });
   gd.on('plotly_hover', eventData => {
     const point = eventData.points && eventData.points[0];
     const trace = point && gd.data[point.curveNumber];
