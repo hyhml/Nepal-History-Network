@@ -32,6 +32,13 @@ SECOND_BATCH = {
     "ram_bahadur_thapa",
     "chandra_prasad_gajurel",
 }
+CONGRESS_BATCH = {
+    "bp_koirala",
+    "matrika_prasad_koirala",
+    "krishna_prasad_bhattarai",
+    "girija_prasad_koirala",
+    "sher_bahadur_deuba",
+}
 
 
 class RaimajhiHoverTest(unittest.TestCase):
@@ -50,7 +57,11 @@ class RaimajhiHoverTest(unittest.TestCase):
         person_traces = [
             trace
             for trace in self.figure.data
-            if isinstance(trace.meta, dict) and trace.meta.get("person_id") == "raimajhi"
+            if isinstance(trace.meta, dict)
+            and trace.meta.get("person_id") == "raimajhi"
+            and trace.mode == "lines"
+            and len(trace.x) == 2
+            and not any(x is None for x in trace.x)
         ]
         self.assertTrue(person_traces)
         self.assertTrue(all(float(x).is_integer() for trace in person_traces for x in trace.x))
@@ -67,7 +78,13 @@ class RaimajhiHoverTest(unittest.TestCase):
         self.assertTrue(any("党外任职" in item and "教育大臣" in item for item in event_hovers))
         self.assertTrue(any("生平事件" in item and "2012年" in item for item in event_hovers))
 
-        tenure_hovers = [trace.text[0] for trace in person_traces if trace.mode == "lines+markers"]
+        tenure_hovers = [
+            trace.text[0]
+            for trace in person_traces
+            if trace.mode == "lines"
+            and len(trace.x) == 2
+            and not any(x is None for x in trace.x)
+        ]
         self.assertTrue(any("党内任职" in item for item in tenure_hovers))
         public_hover = next(item for item in tenure_hovers if "过渡政府教育大臣" in item)
         self.assertIn("党外任职", public_hover)
@@ -104,7 +121,7 @@ class RaimajhiHoverTest(unittest.TestCase):
 
     def test_first_batch_has_people_events_tenures_and_focus_entries(self):
         person_ids = set(self.frames["people"]["person_id"])
-        self.assertEqual(len(person_ids), 21)
+        self.assertEqual(len(person_ids), 26)
         self.assertTrue(FIRST_BATCH <= person_ids)
 
         for table_name in ("events", "tenures"):
@@ -126,6 +143,58 @@ class RaimajhiHoverTest(unittest.TestCase):
         script = build_focus_post_script(self.frames["people"])
         for person_id in SECOND_BATCH:
             self.assertIn(f'"id": "{person_id}"', script)
+
+    def test_congress_history_has_leaders_stages_and_government_roles(self):
+        person_ids = set(self.frames["people"]["person_id"])
+        self.assertTrue(CONGRESS_BATCH <= person_ids)
+        for table_name in ("events", "tenures"):
+            represented = set(self.frames[table_name]["person_id"])
+            self.assertTrue(CONGRESS_BATCH <= represented)
+
+        organizations = self.frames["organizations"].set_index("org_id")
+        self.assertEqual(organizations.loc["nepal_national_congress", "lane_id"], "lane_nepali_congress")
+        self.assertEqual(organizations.loc["nepali_congress", "lane_id"], "lane_nepali_congress")
+        self.assertEqual(
+            organizations.loc["national_democratic_party", "lane_id"],
+            "lane_national_democratic_party_branch",
+        )
+        congress_people = set(
+            self.figure.layout.meta["organization_lane_people"]["lane_nepali_congress"]
+        )
+        self.assertTrue(CONGRESS_BATCH <= congress_people)
+
+        relation_ids = set(self.frames["organization_relations"]["relation_id"])
+        self.assertTrue(
+            {
+                "relation_national_democratic_congress",
+                "relation_democratic_congress_merger",
+                "relation_matrika_national_democratic",
+            }
+            <= relation_ids
+        )
+        labels = set(self.frames["organization_stages"]["label"])
+        self.assertTrue(
+            {
+                "全印尼泊尔国民大会党",
+                "尼泊尔国民大会党",
+                "大会党〔党禁时期〕",
+                "大会党〔七党联盟时期〕",
+            }
+            <= labels
+        )
+
+        gp_traces = [
+            trace
+            for trace in self.figure.data
+            if isinstance(trace.meta, dict)
+            and trace.meta.get("person_id") == "girija_prasad_koirala"
+        ]
+        tenure_hovers = [
+            trace.text[0]
+            for trace in gp_traces
+            if trace.mode == "lines" and len(trace.x) == 2
+        ]
+        self.assertTrue(any("政府任职" in hover for hover in tenure_hovers))
 
     def test_first_batch_organization_paths_are_present(self):
         relation_ids = set(self.frames["organization_relations"]["relation_id"])
@@ -187,8 +256,9 @@ class RaimajhiHoverTest(unittest.TestCase):
             if isinstance(trace.meta, dict)
             and trace.meta.get("person_id")
             and trace.mode == "lines"
+            and any(value is None for value in trace.x)
         ]
-        self.assertLessEqual(len(transition_traces), len(self.frames["people"]))
+        self.assertLessEqual(len(transition_traces), 2 * len(self.frames["people"]))
 
     def test_six_lineages_share_display_lanes_without_merging_data(self):
         organizations = self.frames["organizations"].set_index("org_id")
@@ -210,7 +280,7 @@ class RaimajhiHoverTest(unittest.TestCase):
                 "ncp_unity_centre_masal",
             },
         }
-        self.assertEqual(len(self.frames["organization_lanes"]), 23)
+        self.assertEqual(len(self.frames["organization_lanes"]), 25)
         self.assertEqual(len(self.figure.layout.xaxis.tickvals), 20)
         for lane_id, org_ids in expected_groups.items():
             self.assertEqual(
@@ -228,6 +298,7 @@ class RaimajhiHoverTest(unittest.TestCase):
             "ncp_masal_sharma": "lane_masal_sharma",
             "united_peoples_front_vaidya": "lane_people_front_vaidya",
             "ncp_marxist_leninist_1998": "lane_uml_pradhan_1998_branch",
+            "national_democratic_party": "lane_national_democratic_party_branch",
         }
         for org_id, lane_id in expected.items():
             self.assertEqual(organizations.loc[org_id, "lane_id"], lane_id)
@@ -235,12 +306,12 @@ class RaimajhiHoverTest(unittest.TestCase):
             self.assertIn(lanes.loc[lane_id, "parent_lane_id"], lanes.index)
             self.assertNotEqual(float(lanes.loc[lane_id, "branch_offset"]), 0.0)
         branch_annotations = self.figure.layout.meta["focus_branch_annotations"]
-        self.assertEqual(len(branch_annotations), 3)
+        self.assertEqual(len(branch_annotations), 4)
         self.assertTrue(all(item["related_person_ids"] for item in branch_annotations))
 
     def test_lineage_stages_keep_person_specific_focus_metadata(self):
         stages = self.frames["organization_stages"]
-        self.assertEqual(len(stages), 19)
+        self.assertEqual(len(stages), 26)
         labels = set(stages["label"])
         self.assertTrue(
             {
@@ -267,13 +338,13 @@ class RaimajhiHoverTest(unittest.TestCase):
     def test_prachanda_is_the_default_focus(self):
         script = build_focus_post_script(self.frames["people"])
         self.assertIn("const defaultSelection = ['prachanda'];", script)
-        self.assertIn("? 1 : 0.35", script)
+        self.assertIn("return 0.2", script)
         self.assertNotIn("0.07", script)
         for trace in self.figure.data:
             if trace.name == "政治背景" or trace.name == "政治背景时期":
                 self.assertEqual(trace.opacity, 0.16)
             elif trace.opacity is not None:
-                self.assertEqual(trace.opacity, 0.35)
+                self.assertEqual(trace.opacity, 0.20)
         self.assertIn("function resetToDefault() { resetViewAndControls(defaultSelection); }", script)
         self.assertIn("function showAllPeople()", script)
 

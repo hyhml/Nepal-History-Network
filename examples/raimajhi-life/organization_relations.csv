@@ -35,4 +35,7 @@ relation_masal_sharma,ncp_masal,ncp_masal_sharma,split,1999-01-01,迪纳·纳特
 relation_sharma_maoist,ncp_masal_sharma,ncp_maoist,merge,1999-12-31,夏尔玛领导的党不久并入尼共（毛）；日期仅为图示定位,uncertain,WTY-P38-P39,dina_nath_sharma
 relation_people_front_vaidya,united_peoples_front,united_peoples_front_vaidya,split,1994-07-14,尼兰詹·戈文达·维迪亚带支持者另立同名人民统一战线,day,WTY-P49-P55,niranjan_govinda_vaidya;baburam_bhattarai;prachanda
 relation_unity_masal_unified,ncp_unity_centre_masal,unified_ncp_maoist,merge,2008-12-01,什雷斯塔领导的团结中心—Masal于2008年底并入尼共（毛）,month,WTY-P36-P39,narayan_kaji_shrestha;prachanda
+relation_national_democratic_congress,nepal_national_congress,nepal_democratic_congress,split,1948-08-04,尼泊尔民主大会党从尼泊尔国民大会党分裂出来,day,WTY-P29,
+relation_democratic_congress_merger,nepal_democratic_congress,nepali_congress,merge,1950-04-09,尼泊尔民主大会党同尼泊尔国民大会党合并成立尼泊尔大会党,day,WTY-P29,matrika_prasad_koirala
+relation_matrika_national_democratic,nepali_congress,national_democratic_party,split,1952-01-01,马·普·柯伊拉腊退出大会党另组国家民主党；书中未载具体日期,uncertain,WTY-P30,matrika_prasad_koirala
 relation_maoist_unified,ncp_maoist,unified_ncp_maoist,renamed,2009-01-01,尼共（毛）与团结中心—Masal合并后于2009年初成立统一尼共（毛）,month,WTY-P36-P39,narayan_kaji_shrestha;prachanda

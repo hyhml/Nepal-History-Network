@@ -198,17 +198,22 @@ def build_event_hover(
     person_name: str = "",
 ) -> str:
     heading = f"<b>{escape(person_name)}</b><br>" if person_name else ""
-    if row["person_id"] == "raimajhi":
-        event_type = row["event_type"]
-        if event_type == "public_office":
-            category = "党外任职"
-        elif event_type in {"context", "retirement"}:
-            category = "党外任职相关事件"
-        elif event_type == "death":
-            category = "生平事件"
-        else:
-            category = "党内事件"
-        heading += f"<b>{category}</b><br>"
+    event_type = row["event_type"]
+    if event_type == "public_office":
+        category = "党外任职" if row["person_id"] == "raimajhi" else "政府任职"
+    elif event_type == "government_action":
+        category = "政府事件"
+    elif event_type in {"formation", "split", "merge", "dissolution", "organization_action"}:
+        category = "组织事件"
+    elif event_type in {"context", "retirement"} and row["person_id"] == "raimajhi":
+        category = "党外任职相关事件"
+    elif event_type == "death":
+        category = "生平事件"
+    elif event_type in {"activity", "imprisonment", "background"}:
+        category = "政治活动"
+    else:
+        category = "党内事件"
+    heading += f"<b>{category}</b><br>"
     if "source_excerpt" in row.index and str(row["source_excerpt"]).strip():
         return heading + wrap_hover(row["source_excerpt"]) + "<extra></extra>"
     return heading + wrap_hover(row["description"]) + "<extra></extra>"
@@ -331,6 +336,9 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 raise ValueError(f"组织支线 {branch.lane_id} 的主列不存在：{branch.parent_lane_id}")
             x_for_lane[branch.lane_id] = parent_x + float(branch.branch_offset)
     lane_for_org = dict(zip(organizations["org_id"], organizations["lane_id"]))
+    parent_lane_for_lane = (
+        dict(zip(lanes["lane_id"], lanes["parent_lane_id"])) if not lanes.empty else {}
+    )
     x_for_org = {
         org_id: x_for_lane[lane_id] for org_id, lane_id in lane_for_org.items()
     }
@@ -454,6 +462,11 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         for stage in stages.itertuples(index=False):
             lane_x = x_for_org[stage.org_id]
             x = lane_x + local_offset(stage)
+            stage_lane_id = lane_for_org[stage.org_id]
+            stage_lane_ids = [stage_lane_id]
+            parent_lane_id = parent_lane_for_lane.get(stage_lane_id, "")
+            if parent_lane_id:
+                stage_lane_ids.append(parent_lane_id)
             stage_person_ids = [
                 value.strip()
                 for value in str(getattr(stage, "related_person_ids", "")).split(";")
@@ -464,6 +477,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     {
                         "index": len(fig.layout.shapes or []),
                         "related_person_ids": stage_person_ids,
+                        "organization_lane_ids": stage_lane_ids,
                     }
                 )
                 fig.add_shape(
@@ -481,6 +495,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 {
                     "index": len(fig.layout.annotations or []),
                     "related_person_ids": stage_person_ids,
+                    "organization_lane_ids": stage_lane_ids,
                 }
             )
             fig.add_annotation(
@@ -520,6 +535,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 {
                     "index": len(fig.layout.annotations or []),
                     "related_person_ids": branch_people,
+                    "organization_lane_ids": [branch.lane_id, branch.parent_lane_id],
                 }
             )
             fig.add_annotation(
@@ -616,13 +632,15 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "uncertain": "时间仅为图示定位",
         }.get(tenure.date_precision, tenure.date_precision)
         org_context = f"<br>组织识别：{escape(org_note)}" if org_note else ""
-        if tenure.person_id == "raimajhi":
-            category = "党外任职" if tenure.track == "public_office" else "党内任职"
-            # Public offices share the drawing column but are not party offices.
-            affiliation = "" if tenure.track == "public_office" else f"<br>{escape(org_name)}{org_context}"
-            hover_heading = f"<b>{escape(person_name)}</b><br><b>{category}</b>{affiliation}"
+        if tenure.track == "public_office":
+            category = "党外任职" if tenure.person_id == "raimajhi" else "政府任职"
+            # Government offices use the party lane for positioning only.
+            hover_heading = f"<b>{escape(person_name)}</b><br><b>{category}</b>"
         else:
-            hover_heading = f"<b>{escape(person_name)}</b><br>{escape(org_name)}{org_context}"
+            hover_heading = (
+                f"<b>{escape(person_name)}</b><br><b>党内任职</b>"
+                f"<br>{escape(org_name)}{org_context}"
+            )
         hover = (
             f"{hover_heading}"
             f"<br>职务：{escape(tenure.role)}"
@@ -727,7 +745,15 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 legendgroup="organization-relations",
                 showlegend=False,
                 opacity=0.20,
-                meta={"related_person_ids": related_person_ids},
+                meta={
+                    "related_person_ids": related_person_ids,
+                    "organization_lane_ids": sorted(
+                        {
+                            lane_for_org[relation.source_org_id],
+                            lane_for_org[relation.target_org_id],
+                        }
+                    ),
+                },
             )
         )
 
@@ -895,7 +921,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   const gd = document.getElementById('{plot_id}');
   const people = __PEOPLE_JSON__;
   const traceIndices = gd.data.map((trace, i) =>
-    trace.meta && (trace.meta.person_id || Array.isArray(trace.meta.related_person_ids)) ? i : -1
+    trace.meta && (trace.meta.person_id || Array.isArray(trace.meta.related_person_ids) || Array.isArray(trace.meta.organization_lane_ids)) ? i : -1
   ).filter(i => i >= 0);
   const defaultSelection = ['prachanda'];
   const selected = defaultSelection.slice();
@@ -986,6 +1012,10 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   function traceOpacity(i) {
     const meta = gd.data[i].meta || {};
     if (meta.person_id) return opacityForPerson(meta.person_id);
+    if (Array.isArray(meta.related_person_ids) &&
+        meta.related_person_ids.some(id => selected.includes(id) || hovered === id)) return 1;
+    if (selectedLane && Array.isArray(meta.organization_lane_ids) &&
+        meta.organization_lane_ids.includes(selectedLane)) return 0.6;
     if (Array.isArray(meta.related_person_ids)) return opacityForRelated(meta.related_person_ids);
     return 1;
   }
@@ -996,7 +1026,12 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       lastOpacitySignature = signature;
       Plotly.restyle(gd, {opacity}, traceIndices);
     }
-    const stageOpacity = item => opacityForRelated(item.related_person_ids || []);
+    const stageOpacity = item => {
+      const ids = item.related_person_ids || [];
+      if (ids.some(id => selected.includes(id) || hovered === id)) return 1;
+      if (selectedLane && (item.organization_lane_ids || []).includes(selectedLane)) return 0.6;
+      return opacityForRelated(ids);
+    };
     const stageShapeOpacities = (stageMeta.focus_stage_shapes || []).map(stageOpacity);
     const stageAnnotationOpacities = (stageMeta.focus_stage_annotations || []).map(stageOpacity);
     const branchAnnotationOpacities = (stageMeta.focus_branch_annotations || []).map(stageOpacity);
@@ -1179,7 +1214,7 @@ def parse_args() -> argparse.Namespace:
     default_data = local_data if local_data.is_dir() else PROJECT_ROOT / "examples/raimajhi-life"
     parser.add_argument("--data-dir", type=Path, default=default_data)
     parser.add_argument("--output", type=Path, default=PROJECT_ROOT / "output/nepal-history-network.html")
-    parser.add_argument("--title", default="尼泊尔政治人物与组织关系时序图（1949—2012）")
+    parser.add_argument("--title", default="尼泊尔政治人物与组织关系时序图（1946—2012）")
     parser.add_argument("--cdn", action="store_true", help="在线网页从 Plotly CDN 加载脚本；默认将脚本嵌入 HTML 以供离线使用")
     return parser.parse_args()
 

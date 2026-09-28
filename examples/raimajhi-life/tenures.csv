@@ -69,3 +69,16 @@ madhav_uml_gs,madhav_kumar_nepal,ncp_uml,总书记,1993-01-01,2008-01-01,year,re
 badal_maoist_pb,ram_bahadur_thapa,ncp_maoist,中央政治局委员／斯—嘉运动负责人,1995-03-01,2009-01-01,mixed,uncertain,WTY-P58-P59,1995年3月后负责组织实施斯—嘉运动；书中未载政治局任期，终点按党名变化定位,political,dash,-0.16
 gajurel_masal,chandra_prasad_gajurel,ncp_masal,主要成员,1983-11-01,1985-01-01,mixed,reported,WTY-P36-P43,1983年11月参加另建Masal；1985年转入维迪亚领导的Mashal,political,solid,0.16
 gajurel_mashal,chandra_prasad_gajurel,ncp_mashal,主要成员,1985-01-01,1989-01-01,year,uncertain,WTY-P36-P43,书中将其列入1985年Mashal主要成员；终点仅为当前材料中的显示边界,political,dash,0.16
+bp_national_congress_gs,bp_koirala,nepal_national_congress,总书记,1947-01-25,1950-04-09,day,reported,WTY-P29,1947年合并改组后当选总书记；1950年两支大会党合并成立尼泊尔大会党,political,solid,-0.24
+bp_congress_interior,bp_koirala,nepali_congress,联合政府内务部长,1951-02-18,1951-11-16,mixed,reported,WTY-P29;WTY-P30,德里协议后成立拉纳派与大会党各占一半的联合政府；马·普·柯伊拉腊任首相后结束此段显示,public_office,solid,-0.24
+bp_congress_leader,bp_koirala,nepali_congress,总书记／主要领导人,1951-11-16,1960-12-15,mixed,uncertain,WTY-P30;WTY-P65-P72,马·普·柯伊拉腊任首相后接任总书记；1960年国王解散议会并禁止政党,political,dash,-0.24
+bp_congress_pm,bp_koirala,nepali_congress,首相,1959-05-27,1960-12-15,mixed,reported,WTY-P29;WTY-P65-P72,大会党赢得1959年选举后任首相；1960年马亨德拉国王解散议会并终止民选政府,public_office,solid,-0.24
+matrika_congress_gs,matrika_prasad_koirala,nepali_congress,总书记,1950-04-09,1951-11-16,day,reported,WTY-P29;WTY-P30,1950年大会党成立时当选总书记；任首相后总书记一职由其弟比·普·柯伊拉腊担任,political,solid,0.24
+matrika_congress_pm,matrika_prasad_koirala,nepali_congress,首相,1951-11-16,1952-01-01,mixed,uncertain,WTY-P30,1951年11月16日任首相；书中未载首次内阁垮台日期，终点仅为图示定位,public_office,solid,0.24
+matrika_national_democratic,matrika_prasad_koirala,national_democratic_party,创建者／领袖,1952-01-01,1955-01-01,year,uncertain,WTY-P30,首次内阁垮台后退出大会党另组国家民主党；1955年该党成为在野党,political,dash,0
+matrika_pm_again,matrika_prasad_koirala,national_democratic_party,首相／联合政府首相,1953-03-01,1954-01-01,mixed,reported,WTY-P30,1953年3月再次任首相；其政府被解散后又组织联合政府，1954年内阁再次被解散,public_office,solid,0
+kp_congress_chair,krishna_prasad_bhattarai,nepali_congress,大会党主席,1990-01-18,1994-11-15,mixed,uncertain,WTY-P46-P47;WTY-P54-P59,1990年以党主席身份推动恢复民主；1994年书中仍称其为大会党主席,political,dash,-0.18
+kp_interim_pm,krishna_prasad_bhattarai,nepali_congress,多党联合临时政府首相,1990-04-16,1991-05-12,mixed,reported,WTY-P46-P47,负责起草新宪法并筹备多党议会选举；终点按1991年大选后新政府成立定位,public_office,solid,-0.18
+gp_congress_pm_1991,girija_prasad_koirala,nepali_congress,首相,1991-05-12,1994-07-10,day,reported,WTY-P49-P55;WTY-P54-P59,大会党赢得1991年大选后组阁；1994年7月10日因党内分裂和外部压力辞职,public_office,solid,0
+gp_spa_pm,girija_prasad_koirala,nepali_congress,七党联盟政府首相,2006-04-24,2008-05-28,mixed,reported,WTY-P181-P205;WTY-P192-P214,恢复议会后领导七党联盟政府并同尼共（毛）推进和平进程；终点按共和国成立定位,public_office,solid,0
+deuba_congress_pm,sher_bahadur_deuba,nepali_congress,首相,1995-09-11,1996-02-13,mixed,uncertain,WTY-P57-P62,1995年9月11日大会党重新组阁后任首相；终点仅显示至人民战争爆发，不代表其实际卸任日期,public_office,dash,0.18
