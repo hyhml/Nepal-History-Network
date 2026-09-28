@@ -514,11 +514,6 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         org_note = branch_note_for_org[tenure.org_id]
         x = person_x(tenure)
         lane_type = lane_type_for_org.get(tenure.org_id, "main")
-        dash = "dash" if tenure.status in {"disputed", "uncertain"} else "solid"
-        if "line_style" in tenures.columns and tenure.line_style:
-            dash = tenure.line_style
-        if lane_type == "branch" and dash == "solid":
-            dash = "dot"
         line_color = person_color_for.get(
             tenure.person_id, color_for_org[tenure.org_id]
         )
@@ -550,7 +545,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 x=[x, x],
                 y=[tenure.start_date, tenure.end_date],
                 mode="lines+markers",
-                line={"color": line_color, "width": 3 if lane_type == "branch" else 4, "dash": dash},
+                line={"color": line_color, "width": 3 if lane_type == "branch" else 4, "dash": "solid"},
                 marker={
                     "size": 9,
                     "color": line_color,
@@ -595,7 +590,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                     x=transition_x,
                     y=transition_y,
                     mode="lines",
-                    line={"color": transition_color, "width": 2, "dash": "dot"},
+                    line={"color": transition_color, "width": 2, "dash": "solid"},
                     text=transition_text,
                     hovertemplate="%{text}",
                     showlegend=False,
