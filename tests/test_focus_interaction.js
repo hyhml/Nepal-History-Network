@@ -24,6 +24,7 @@ function control(selector) {
 }
 const rail = {querySelector: control};
 const domListeners = {};
+const documentListeners = {};
 const plotlyListeners = {};
 const pendingTimers = [];
 const gd = {
@@ -52,7 +53,7 @@ const document = {
   getElementById: () => gd,
   createElement: tag => tag === 'aside' ? rail : {appendChild() {}},
   head: {appendChild() {}}, body: {appendChild() {}},
-  addEventListener() {},
+  addEventListener(type, handler) { (documentListeners[type] ||= []).push(handler); },
 };
 const Plotly = {
   restyle(_gd, update, indices) {
@@ -67,7 +68,8 @@ const window = {
 vm.runInNewContext(html.slice(start, end), {document, window, Plotly});
 
 function pointer(type, x, y = 400) {
-  for (const handler of domListeners[type] || []) {
+  const listeners = type === 'pointerdown' ? domListeners[type] : documentListeners[type];
+  for (const handler of listeners || []) {
     handler({pointerId: 1, clientX: x, clientY: y});
   }
 }
@@ -81,7 +83,7 @@ laneSelect.value = '';
 laneSelect.listeners.change();
 
 pointer('pointerdown', 229);
-pointer('pointerup', 229);
+pointer('pointerup', 229); // Plotly dragcover is outside gd; only document receives this.
 flushTimers();
 assert.equal(laneSelect.value, 'lane_raimajhi', 'blank column click selects its organization');
 assert.equal(gd.data[1].opacity, 0.6, 'blank column click highlights its people');

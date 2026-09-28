@@ -1118,7 +1118,9 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     const laneId = axisLaneIds[column];
     return laneOptions.some(lane => lane.id === laneId && lane.kind === 'main') ? laneId : null;
   }
-  gd.addEventListener('pointerup', event => {
+  // Plotly creates a temporary dragcover outside gd after pointerdown. Capture
+  // pointerup on document so a click on the plot is not lost to that overlay.
+  document.addEventListener('pointerup', event => {
     const start = pointerStart;
     pointerStart = null;
     if (!start || start.id !== event.pointerId ||
@@ -1131,7 +1133,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       if (!dataClickHandled) setSelectedLane(selectedLane === laneId ? null : laneId);
     }, 40);
   }, true);
-  gd.addEventListener('pointercancel', () => { pointerStart = null; }, true);
+  document.addEventListener('pointercancel', () => { pointerStart = null; }, true);
   gd.addEventListener('click', event => {
     const tick = event.target && event.target.closest ? event.target.closest('.xaxislayer-above .xtick') : null;
     if (!tick) return;
