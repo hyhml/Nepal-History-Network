@@ -874,15 +874,6 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "organization_lane_people": lane_people,
             "organization_lane_options": lane_options,
             "organization_lane_axis_ids": display_lanes["lane_id"].tolist(),
-            "organization_lane_hit_ids": [
-                lane_id for lane_id in display_lanes["lane_id"]
-                if lane_id != "lane_background"
-            ],
-            "organization_lane_hit_centers": {
-                row.lane_id: row.display_order
-                for row in display_lanes.itertuples(index=False)
-                if row.lane_id != "lane_background"
-            },
         }
     )
     return fig
@@ -917,8 +908,6 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   const lanePeople = stageMeta.organization_lane_people || {};
   const laneOptions = stageMeta.organization_lane_options || [];
   const axisLaneIds = stageMeta.organization_lane_axis_ids || [];
-  const laneHitIds = stageMeta.organization_lane_hit_ids || [];
-  const laneHitCenters = stageMeta.organization_lane_hit_centers || {};
   const initialXRange = Array.isArray(gd.layout.xaxis.range) ? gd.layout.xaxis.range.slice() : null;
   const initialYRange = Array.isArray(gd.layout.yaxis.range) ? gd.layout.yaxis.range.slice() : null;
 
@@ -1095,6 +1084,54 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     if (event.key === 'Escape') { event.preventDefault(); resetToDefault(); }
   });
   gd.addEventListener('click', event => { gd.__focusShiftClick = event.shiftKey; }, true);
+  let dataClickHandled = false;
+  let pointerStart = null;
+  gd.addEventListener('pointerdown', event => {
+    dataClickHandled = false;
+    pointerStart = {id: event.pointerId, x: event.clientX, y: event.clientY};
+  }, true);
+  function laneAtClick(event) {
+    const full = gd._fullLayout;
+    const axis = full && full.xaxis;
+    if (!axis || !Array.isArray(axis.range)) return null;
+    const dragArea = gd.querySelector('.nsewdrag');
+    let rect = dragArea && dragArea.getBoundingClientRect();
+    if (!rect || !rect.width || !rect.height) {
+      const size = full._size;
+      const graph = gd.getBoundingClientRect();
+      if (!size || !full.width || !full.height) return null;
+      const scaleX = graph.width / full.width;
+      const scaleY = graph.height / full.height;
+      rect = {
+        left: graph.left + size.l * scaleX,
+        top: graph.top + size.t * scaleY,
+        width: size.w * scaleX,
+        height: size.h * scaleY,
+      };
+    }
+    if (event.clientX < rect.left || event.clientX > rect.left + rect.width ||
+        event.clientY < rect.top || event.clientY > rect.top + rect.height) return null;
+    const fraction = (event.clientX - rect.left) / rect.width;
+    const x = Number(axis.range[0]) + fraction * (Number(axis.range[1]) - Number(axis.range[0]));
+    const column = Math.round(x);
+    if (Math.abs(x - column) > 0.42) return null;
+    const laneId = axisLaneIds[column];
+    return laneOptions.some(lane => lane.id === laneId && lane.kind === 'main') ? laneId : null;
+  }
+  gd.addEventListener('pointerup', event => {
+    const start = pointerStart;
+    pointerStart = null;
+    if (!start || start.id !== event.pointerId ||
+        Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
+    if (event.target && event.target.closest &&
+        event.target.closest('.xaxislayer-above .xtick, .modebar')) return;
+    const laneId = laneAtClick(event);
+    if (!laneId) return;
+    window.setTimeout(() => {
+      if (!dataClickHandled) setSelectedLane(selectedLane === laneId ? null : laneId);
+    }, 40);
+  }, true);
+  gd.addEventListener('pointercancel', () => { pointerStart = null; }, true);
   gd.addEventListener('click', event => {
     const tick = event.target && event.target.closest ? event.target.closest('.xaxislayer-above .xtick') : null;
     if (!tick) return;
@@ -1110,28 +1147,6 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     update();
   });
   gd.on('plotly_unhover', () => { hovered = null; update(); });
-  function laneIdFromHitPoint(point) {
-    if (!point) return null;
-    let id = point.customdata;
-    if (Array.isArray(id)) id = id[0];
-    if (typeof id === 'string' && laneOptions.some(lane => lane.id === id)) return id;
-    const x = Number(point.x);
-    if (Number.isFinite(x)) {
-      let nearest = null;
-      let distance = Infinity;
-      for (const candidate of laneHitIds) {
-        const delta = Math.abs(x - Number(laneHitCenters[candidate]));
-        if (delta < distance) { nearest = candidate; distance = delta; }
-      }
-      if (nearest && distance <= 0.421) return nearest;
-    }
-    const pointNumber = Number(point.pointNumber);
-    if (Number.isInteger(pointNumber) && pointNumber >= 0) {
-      const candidate = laneHitIds[Math.floor(pointNumber / 6)];
-      if (candidate) return candidate;
-    }
-    return null;
-  }
   gd.on('plotly_click', eventData => {
     const points = eventData.points || [];
     const personPoint = points.find(point => {
@@ -1142,22 +1157,12 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       const trace = gd.data[point.curveNumber];
       return trace && trace.meta && Array.isArray(trace.meta.related_person_ids);
     });
-    const lanePoint = points.find(point => {
-      const trace = gd.data[point.curveNumber];
-      return trace && trace.meta && trace.meta.organization_lane_hit_area && laneIdFromHitPoint(point);
-    });
     if (personPoint) {
+      dataClickHandled = true;
       const trace = gd.data[personPoint.curveNumber];
       togglePerson(trace.meta.person_id, Boolean(gd.__focusShiftClick));
     } else if (relationPoint) {
-      // Preserve organization split/merge line behavior; it is not a lane hit.
-    } else if (lanePoint) {
-      const laneId = laneIdFromHitPoint(lanePoint);
-      setSelectedLane(selectedLane === laneId ? null : laneId);
-    } else {
-      const point = points[0];
-      const trace = point && gd.data[point.curveNumber];
-      togglePerson(trace && trace.meta ? trace.meta.person_id : null, Boolean(gd.__focusShiftClick));
+      dataClickHandled = true;
     }
     gd.__focusShiftClick = false;
   });
