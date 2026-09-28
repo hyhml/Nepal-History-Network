@@ -246,6 +246,46 @@ def format_tenure_date(value: pd.Timestamp, precision: str) -> str:
     return f"{value.year}年{value.month}月{value.day}日"
 
 
+def spread_event_nodes(
+    events: pd.DataFrame,
+    base_x: list[float],
+    x_pixels_per_unit: float,
+    y_pixels_per_day: float,
+) -> tuple[list[float], list[str]]:
+    """Separate nearby event markers horizontally while keeping their dates."""
+    count = len(events)
+    if count < 2:
+        return base_x, ["middle right"] * count
+
+    radius_px = 15.0
+    x_radius = radius_px / max(x_pixels_per_unit, 1.0)
+    y_radius_days = radius_px / max(y_pixels_per_day, 0.01)
+    dates = [value.toordinal() for value in events["event_date"]]
+    adjusted_x: list[float] = []
+    text_positions = [
+        str(events.iloc[index].get("label_position", "") or "middle right")
+        for index in range(count)
+    ]
+    spacing = x_radius * 1.1
+    for index in range(count):
+        candidates = [0.0]
+        for step in range(1, count + 1):
+            candidates.extend((step * spacing, -step * spacing))
+        for candidate in candidates:
+            proposed_x = base_x[index] + candidate
+            overlaps = any(
+                abs(proposed_x - adjusted_x[previous]) * x_pixels_per_unit < radius_px
+                and abs(dates[index] - dates[previous]) * y_pixels_per_day < radius_px
+                for previous in range(index)
+            )
+            if not overlaps:
+                adjusted_x.append(proposed_x)
+                if candidate:
+                    text_positions[index] = "top center" if candidate > 0 else "bottom center"
+                break
+    return adjusted_x, text_positions
+
+
 def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     organizations = frames["organizations"].copy()
     people = frames["people"].copy()
@@ -300,6 +340,24 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     lane_type_for_org = {
         org_id: lane_type_by_id[lane_id] for org_id, lane_id in lane_for_org.items()
     }
+    chart_height = max(1500, min(2400, 850 + len(events) * 13))
+    chart_width = max(1450, len(display_lanes) * 125 + 330)
+    x_range_width = (
+        display_lanes["display_order"].max()
+        - display_lanes["display_order"].min()
+        + 1.2
+    )
+    x_pixels_per_unit = (chart_width - 430) / max(x_range_width, 1)
+    all_dates = list(tenures["start_date"]) + list(tenures["end_date"])
+    all_dates += list(events["event_date"])
+    if not backgrounds.empty:
+        all_dates += list(backgrounds["event_date"])
+        if "end_date" in backgrounds.columns:
+            all_dates += list(backgrounds["end_date"].dropna())
+    if not stages.empty:
+        all_dates += list(stages["start_date"]) + list(stages["end_date"])
+    y_span_days = max((max(all_dates) - min(all_dates)).days, 1)
+    y_pixels_per_day = (chart_height - 275) / y_span_days
     color_for_org = dict(zip(organizations["org_id"], organizations["color"]))
     name_for_org = dict(zip(organizations["org_id"], organizations["name_zh"]))
     branch_note_for_org = dict(
@@ -544,13 +602,8 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             go.Scatter(
                 x=[x, x],
                 y=[tenure.start_date, tenure.end_date],
-                mode="lines+markers",
+                mode="lines",
                 line={"color": line_color, "width": 3 if lane_type == "branch" else 4, "dash": "solid"},
-                marker={
-                    "size": 9,
-                    "color": line_color,
-                    "symbol": "diamond" if lane_type == "branch" else person_symbol_for.get(tenure.person_id, "circle"),
-                },
                 text=[hover, hover],
                 hovertemplate="%{text}",
                 name=full_name_for_person.get(tenure.person_id, person_name),
@@ -627,9 +680,8 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             go.Scatter(
                 x=[source_x, target_x],
                 y=[relation.event_date, relation.event_date],
-                mode="lines+markers",
+                mode="lines",
                 line={"color": "#7A5195", "width": 3, "dash": "dash"},
-                marker={"symbol": "diamond", "size": 10, "color": "#7A5195"},
                 hovertemplate=(
                     f"<b>{relation_labels.get(relation.relation_type, relation.relation_type)}</b>"
                     f"<br>{name_for_org[relation.source_org_id]} → "
@@ -654,18 +706,26 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             ),
             axis=1,
         )
+        base_event_x = [
+            person_x(row) for row in events.itertuples(index=False)
+        ]
+        event_x, event_label_positions = spread_event_nodes(
+            events,
+            base_event_x,
+            x_pixels_per_unit,
+            y_pixels_per_day,
+        )
+        events["_plot_x"] = event_x
+        events["_plot_text_position"] = event_label_positions
         event_text = events["title"]
         if "show_label" in events.columns:
             event_text = event_text.where(events["show_label"].str.lower() != "no", "")
-        event_text_position: str | pd.Series = "middle right"
-        if "label_position" in events.columns:
-            event_text_position = events["label_position"].replace("", "middle right")
         for person_id, person_events in events.groupby("person_id", sort=False):
             labels = event_text.loc[person_events.index]
-            positions = event_text_position.loc[person_events.index] if isinstance(event_text_position, pd.Series) else event_text_position
+            positions = events.loc[person_events.index, "_plot_text_position"]
             fig.add_trace(
                 go.Scatter(
-                    x=[person_x(row) for row in person_events.itertuples(index=False)],
+                    x=person_events["_plot_x"],
                     y=person_events["event_date"],
                     mode="markers+text",
                     marker={
@@ -696,8 +756,8 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         if {"event_adhikari_china", "event_1957_gs"}.issubset(congress_events.index):
             absent = congress_events.loc["event_adhikari_china"]
             elected = congress_events.loc["event_1957_gs"]
-            x0 = x_for_org[absent["org_id"]] + float(absent["x_offset"] or 0.0)
-            x1 = x_for_org[elected["org_id"]] + float(elected["x_offset"] or 0.0)
+            x0 = absent["_plot_x"]
+            x1 = elected["_plot_x"]
             congress_date = max(absent["event_date"], elected["event_date"])
             fig.add_annotation(
                 x=x1,
@@ -717,9 +777,6 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
                 hovertext="1957年尼共二大：阿迪卡里因病缺席，腊伊玛吉当选总书记",
                 captureevents=True,
             )
-
-    chart_height = max(1500, min(2400, 850 + len(events) * 13))
-    chart_width = max(1450, len(display_lanes) * 125 + 330)
 
     fig.update_layout(
         title={"text": title, "x": 0.5},

@@ -21,3 +21,4 @@
 {"id":"REQ-0021","date":"2026-09-27","source":"conversation","text":"我也支持把短命单人组织改成“支线节点”，你看怎么做比较合适。"}
 {"id":"REQ-0022","date":"2026-09-27","source":"conversation","text":"默认的透明度有点高了，调到35%试试"}
 {"id":"REQ-0023","date":"2026-09-28","source":"conversation","text":"同一个人物转化成实线吧，不要区分这个时间是否已知了。组织的分裂和合并还是用虚线。"}
+{"id":"REQ-0024","date":"2026-09-28","source":"conversation","text":"节点不能重合，否则有些信息查看不到。"}
