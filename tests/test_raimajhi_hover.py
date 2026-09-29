@@ -1,5 +1,6 @@
 """Regression checks for Rayamajhi's combined visual trajectory."""
 
+import json
 import unittest
 from pathlib import Path
 
@@ -11,7 +12,8 @@ from build_chart import (
 )
 
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "examples" / "raimajhi-life"
+ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = ROOT / "examples" / "raimajhi-life"
 FIRST_BATCH = {
     "baburam_bhattarai",
     "tulsi_lal_amatya",
@@ -131,6 +133,34 @@ class RaimajhiHoverTest(unittest.TestCase):
         script = build_focus_post_script(self.frames["people"])
         for person_id in FIRST_BATCH:
             self.assertIn(f'"id": "{person_id}"', script)
+
+    def test_project_summaries_match_current_dataset_counts(self):
+        people_count = len(self.frames["people"])
+        organization_count = len(self.frames["organizations"])
+        lanes = self.frames["organization_lanes"]
+        main_lane_count = int((lanes["lane_type"] == "main").sum())
+        branch_lane_count = int((lanes["lane_type"] == "branch").sum())
+
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn(
+            f"{people_count}个人物、{organization_count}个真实组织、"
+            f"{main_lane_count}条主列和{branch_lane_count}条支线节点",
+            readme,
+        )
+
+        catalog = json.loads(
+            (ROOT / "materials" / "catalog.json").read_text(encoding="utf-8")
+        )
+        dataset_titles = [
+            entry["title"] for entry in catalog if entry["kind"] == "datasets"
+        ]
+        self.assertEqual(len(dataset_titles), 2)
+        self.assertTrue(all("二十六位人物" in title for title in dataset_titles))
+
+        public_html = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
+        self.assertEqual(public_html.count('"id": "sher_bahadur_deuba"'), 1)
+        for person_id in self.frames["people"]["person_id"]:
+            self.assertIn(f'"id": "{person_id}"', public_html)
 
     def test_second_batch_has_people_events_tenures_and_focus_entries(self):
         person_ids = set(self.frames["people"]["person_id"])
