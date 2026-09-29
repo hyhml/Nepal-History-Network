@@ -42,17 +42,23 @@
     </div>
     <div id="focus-status" role="status">默认聚焦：普拉昌达</div>
     <hr>
-    <h4>快捷操作</h4>
-    <ul>
-      <li>悬停节点或人物线：临时高亮</li>
-      <li>单击节点或人物线：锁定／取消</li>
-      <li>Shift＋单击：加入对比，最多 3 人</li>
-      <li>开启比较模式后，单击可增删对比人物</li>
-      <li>按 Esc：恢复默认聚焦普拉昌达和初始视图</li>
-      <li>点“全部人物”：取消人物聚焦</li>
-      <li>点击组织列名或列内空白色带，或使用下拉框：聚焦该列人物</li>
+    <h4>使用说明</h4>
+    <ol class="usage-steps">
+      <li><b>查看一个人物：</b>悬停人物节点或人物线，可临时看清他的全部轨迹；单击可锁定，再次单击可取消。</li>
+      <li><b>比较多个人物：</b>按住 Shift 单击，或先开启“比较模式”，最多同时选择 3 人。</li>
+      <li><b>查看一个组织谱系：</b>点击图顶列名、列内空白色带，或使用上方下拉框。再次点击同一列，或在下拉框选择“不选择组织列”，即可取消。</li>
+      <li><b>同时看人物和组织：</b>锁定的人物最醒目；同一组织谱系的其他人物次之；其余内容淡显。</li>
+      <li><b>避免误选：</b>人物节点和人物线用于选择人物；紫色组织关系线用于悬停查看分合详情，点击它不会选中后面的整列。要选择整列，请点击列名或空白色带。</li>
+      <li><b>恢复：</b>“全部人物”只取消人物聚焦，并保留组织选择；按 Esc 会清除组织选择、恢复默认聚焦普拉昌达，并重置缩放与页面位置。</li>
+    </ol>
+    <h4>图形怎么读</h4>
+    <ul class="chart-key">
+      <li><b>明暗：</b>重点人物完全高亮；所选组织谱系的相关人物中度高亮；其他内容淡显。100%／60%／20%只是透明度，不代表历史重要性、组织规模或史料可信度。</li>
+      <li><b>人物线：</b>彩色纵线表示人物在相应组织中的任职或活动时段；跨列连线表示同一人物的组织轨迹。</li>
+      <li><b>组织关系线：</b>紫色虚线表示分裂、合并、改名、正式另立或共同组建；紫色点线表示只有部分成员并入。</li>
+      <li><b>阶段线：</b>一列内部的短横虚线和阶段名称，用来区分同一谱系中的不同时期或组织。</li>
+      <li><b>列头 ↓：</b>只表示从早到晚的排列和谱系归类，不等于直接改名、合并或无间断继承；粗体名称是该列的代表性组织。</li>
     </ul>
-    <small>组织成员为 60%，选中人物为 100%，其他人物为 20%。点到人物或关系线时仍由其自身交互响应。列头中的 ↓ 只表示时间顺序与谱系归类，不必然表示直接改名或合并。</small>
   `;
   const style = document.createElement('style');
   style.textContent = `
@@ -65,8 +71,10 @@
     #person-focus-rail button { flex: 1; padding: 7px 5px; border: 1px solid #aeb8c2; border-radius: 6px; background: #f7f9fb; cursor: pointer; color: #263238; }
     #person-focus-rail button:hover, #person-focus-rail button[aria-pressed="true"] { background: #e4eef8; border-color: #4c78a8; }
     #focus-status { margin-top: 10px; padding: 7px; border-radius: 5px; background: #f0f3f5; font-size: 12px; }
-    #person-focus-rail ul { margin: 5px 0 12px; padding-left: 18px; } #person-focus-rail li { margin: 4px 0; }
-    #person-focus-rail small { display: block; color: #59636e; }
+    #person-focus-rail ul, #person-focus-rail ol { margin: 5px 0 12px; padding-left: 20px; }
+    #person-focus-rail li { margin: 7px 0; }
+    #person-focus-rail .usage-steps { padding-left: 22px; }
+    #person-focus-rail .chart-key { color: #46515a; }
     #temporal_network .xaxislayer-above .xtick { cursor: pointer; }
     #sticky-lane-header { display: none; position: fixed; z-index: 900; top: 0; box-sizing: border-box; overflow: hidden; border-bottom: 1px solid #cbd5e1; background: rgba(255,255,255,.97); box-shadow: 0 2px 8px rgba(15,23,42,.12); pointer-events: none; }
     #sticky-lane-header.is-visible { display: block; }
@@ -180,15 +188,15 @@
       if (Object.keys(updates).length) Plotly.relayout(gd, updates);
     }
     if (selected.length) {
-      status.textContent = '人物 100%：' + selected.map(id => people.find(p => p.id === id).name).join('；') +
-        (selectedLane ? '；组织 60%：' + (laneOptions.find(l => l.id === selectedLane) || {}).name : '');
+      status.textContent = '重点人物：' + selected.map(id => people.find(p => p.id === id).name).join('；') +
+        (selectedLane ? '；已选组织谱系：' + (laneOptions.find(l => l.id === selectedLane) || {}).name : '');
     } else if (hovered) {
-      status.textContent = '人物 100%：' + people.find(p => p.id === hovered).name +
-        (selectedLane ? '；组织 60%：' + (laneOptions.find(l => l.id === selectedLane) || {}).name : '');
+      status.textContent = '临时查看：' + people.find(p => p.id === hovered).name +
+        (selectedLane ? '；已选组织谱系：' + (laneOptions.find(l => l.id === selectedLane) || {}).name : '');
     } else if (selectedLane) {
-      status.textContent = '组织 60%：' + (laneOptions.find(l => l.id === selectedLane) || {}).name;
+      status.textContent = '已选组织谱系：' + (laneOptions.find(l => l.id === selectedLane) || {}).name;
     } else {
-      status.textContent = '当前：全部人物（20%）';
+      status.textContent = '当前：未锁定人物';
     }
   }
   function setSelectedLane(id) {

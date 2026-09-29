@@ -631,7 +631,12 @@ class RaimajhiHoverTest(unittest.TestCase):
         self.assertIn("function showAllPeople()", script)
         self.assertIn("function updateStickyLaneHeader()", script)
         self.assertIn("plotly_relayout", script)
-        self.assertIn("只表示时间顺序与谱系归类", script)
+        self.assertIn("<h4>使用说明</h4>", script)
+        self.assertIn("100%／60%／20%只是透明度", script)
+        self.assertIn("点击它不会选中后面的整列", script)
+        self.assertIn("<b>列头 ↓：</b>", script)
+        self.assertIn("已选组织谱系：", script)
+        self.assertNotIn("组织成员为 60%", script)
 
 
 if __name__ == "__main__":
