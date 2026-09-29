@@ -12,7 +12,7 @@ adhikari_ncp_uml_chair,adhikari,ncp_uml,党主席,1991-01-01,1993-09-01,month,re
 adhikari_ncp_uml_chair_reelected,adhikari,ncp_uml,党主席（1993年再次当选；任期终止时间未载）,1993-09-01,1999-04-26,mixed,uncertain,WTY-P30,原书未说明1993年再次当选后的任期终止时间；线段止于去世日仅为显示边界,political,dash,-0.16
 adhikari_pm,adhikari,ncp_uml,尼泊尔首相,1994-11-01,1995-09-01,month,reported,WTY-P30,1994年11月当选；1995年9月辞职,public_office,solid,0.20
 shrestha_first_gs,pushpa_lal_shrestha,ncp_unified,首任总书记,1949-04-22,1954-01-27,mixed,reported,WTY-P27,1949年4月筹建集会推选；同年9月发布党纲并宣告正式成立；1951年代表会议再次当选；1954年一大由阿迪卡里接任,political,solid,-0.16
-shrestha_amatya_shared_leadership,pushpa_lal_shrestha,ncp_amatya,与阿玛提亚分担领导职责,1962-04-01,1968-01-01,mixed,uncertain,WTY-P31-P32,1962年三大决定二人共同分担领导职责；1968年什雷斯塔另组政党；两个端点均未见确切日,political,dash,-0.16
+shrestha_amatya_shared_leadership,pushpa_lal_shrestha,ncp_unified,与阿玛提亚分担领导职责,1962-04-01,1968-01-01,mixed,uncertain,WTY-P31-P32,1962年三大决定二人共同分担全党领导职责；1968年什雷斯塔另组政党；结束日期未见确切日,political,dash,-0.16
 shrestha_pushpa_lal_party,pushpa_lal_shrestha,ncp_pushpa_lal,创建者／主要领导人,1968-01-01,1978-07-22,mixed,reported,WTY-P27,1968年另建尼共（普什帕·拉尔）；书内第27页脚注明确其领导至1978年7月22日去世,political,solid,-0.16
 singh_congress_member,mohan_bikram_singh,nepali_congress,党员／民主运动参与者,1950-01-01,1953-01-01,year,reported,WTY-P34-P36,1950年加入大会党；1953年离开转入尼共,political,solid,-0.16
 singh_ncp_member,mohan_bikram_singh,ncp_unified,党员／1957年起为中央委员,1953-01-01,1961-01-01,year,uncertain,WTY-P34-P36,1953年加入尼共；1957年当选中央委员；1961年再次被捕；线段终点仅为这段活跃期的显示边界并非退党日期,political,dash,0.16
@@ -33,7 +33,8 @@ baburam_people_front,baburam_bhattarai,united_peoples_front,召集人／主席,1
 baburam_unity_faction,baburam_bhattarai,ncp_unity_centre_prachanda,主要领导人,1994-05-01,1995-03-01,mixed,uncertain,WTY-P47-P51,与普拉昌达另立同名团结中心；确切分裂日未载,political,dash,0.16
 baburam_maoist,baburam_bhattarai,ncp_maoist,主要领导人／党内二号领导人,1995-03-01,2012-12-31,mixed,uncertain,WTY-P52-P59,书中称尼共（毛）创立后一直是仅次于普拉昌达的领导人；终点为当前图示边界,political,dash,0.16
 amatya_ncp_leadership,tulsi_lal_amatya,ncp_unified,中央领导人,1960-01-01,1962-04-01,mixed,uncertain,WTY-P30,1960年党禁后被迫转移印度；书中未给出进入领导层的确切日期,political,dash,0.16
-amatya_branch_leadership,tulsi_lal_amatya,ncp_amatya,总书记／主要领导人,1962-04-01,1992-01-01,mixed,reported,WTY-P30;WTY-P33-P34,1962年三大当选总书记；1968年后其党称尼共（阿玛提亚）；1992年并入尼共（联合）,political,solid,0.16
+amatya_unified_leadership,tulsi_lal_amatya,ncp_unified,总书记／共同领导,1962-04-01,1968-01-01,mixed,reported,WTY-P30;WTY-P31-P32,1962年三大当选总书记并与什雷斯塔共同分担全党领导；1968年什雷斯塔另立后原组织才称尼共（阿玛提亚）,political,solid,0.16
+amatya_branch_leadership,tulsi_lal_amatya,ncp_amatya,总书记／主要领导人,1968-01-01,1992-01-01,year,reported,WTY-P33-P34,1968年什雷斯塔另立后其党称尼共（阿玛提亚）；1992年并入尼共（联合）,political,solid,0.16
 amatya_united,tulsi_lal_amatya,ncp_united_1991,合并方领导人,1992-01-01,1993-01-01,year,uncertain,WTY-P32-P34,1992年阿玛提亚派并入尼共（联合）；一年后部分成员脱离,political,dash,0.16
 nirmal_fourth_congress,nirmal_lama,ncp_fourth_congress,创建者／1978年起任总书记,1974-09-15,1990-11-19,mixed,reported,WTY-P36-P43,与辛格共同创建；1978年任总书记；1983年辛格另立Masal后继续领导四大派；1990年参与组建团结中心,political,solid,0
 nirmal_unity_centre,nirmal_lama,ncp_unity_centre,创建者／主要领导人,1990-11-19,1994-05-01,mixed,uncertain,WTY-P47-P51,其四大派参与组建团结中心；1994年路线斗争后被清除出党,political,dash,0

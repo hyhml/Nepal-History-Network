@@ -3,8 +3,8 @@ relation_two_centres,ncp_unified,ncp_raimajhi,split,1962-04-01,被三大开除�
 relation_manandhar_split,ncp_raimajhi,ncp_manandhar,split,1981-01-01,马南达尔带领一大部分党员脱离并另立尼共（马南达尔）,year,WTY-P32,raimajhi;bishnu_manandhar
 relation_adhikari_unity_marxist,ncp_unity_congress,ncp_marxist,merge,1986-01-01,尼共（统一大会）的一部分并入普拉丹领导的组织并组建尼共（马）,year,WTY-P30;WTY-P33,adhikari;sahana_pradhan
 relation_adhikari_marxist_uml,ncp_marxist,ncp_uml,merge,1991-01-01,尼共（马）与尼共（马列）联合成立尼共（联合马列）,year,WTY-P30;WTY-P33,adhikari;sahana_pradhan;madan_bhandari
-relation_amatya_1962,ncp_unified,ncp_amatya,split,1962-04-01,三大选举阿玛提亚为总书记；什雷斯塔与其共同分担领导职责；腊伊玛吉集团另控中央,month,WTY-P31-P32,pushpa_lal_shrestha;tulsi_lal_amatya
-relation_shrestha_1968,ncp_amatya,ncp_pushpa_lal,split,1968-01-01,什雷斯塔带领大部分骨干脱离阿玛提亚领导的尼共另建尼共（普什帕·拉尔）,year,WTY-P33-P34,pushpa_lal_shrestha
+relation_amatya_1968,ncp_unified,ncp_amatya,renamed,1968-01-01,什雷斯塔另立后，阿玛提亚领导的原组织此后被称为尼共（阿玛提亚）,year,WTY-P33-P34,tulsi_lal_amatya
+relation_shrestha_1968,ncp_unified,ncp_pushpa_lal,split,1968-01-01,什雷斯塔带领大部分骨干脱离原尼共并另建尼共（普什帕·拉尔）,year,WTY-P33-P34,pushpa_lal_shrestha;tulsi_lal_amatya
 relation_fourth_masal,ncp_fourth_congress,ncp_masal,split,1983-11-01,辛格率追随者脱离尼共（四大）另建Masal,month,WTY-P36-P39,mohan_bikram_singh;prachanda;mohan_vaidya;baburam_bhattarai;nirmal_lama;chandra_prasad_gajurel
 relation_masal_mashal,ncp_masal,ncp_mashal,split,1985-01-01,维迪亚派脱离辛格领导的Masal另建Mashal；普拉昌达转入后者,year,WTY-P36-P39,mohan_bikram_singh;prachanda;mohan_vaidya;chandra_prasad_gajurel
 relation_mashal_unity_centre,ncp_mashal,ncp_unity_centre,merge,1990-11-19,普拉昌达领导的Mashal—CC参与组建尼共（团结中心）,day,WTY-P47-P51,prachanda;mohan_vaidya

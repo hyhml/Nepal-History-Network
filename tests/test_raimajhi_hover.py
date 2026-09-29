@@ -245,6 +245,38 @@ class RaimajhiHoverTest(unittest.TestCase):
             <= relation_ids
         )
 
+    def test_1962_to_1968_shared_leadership_stays_in_unified_ncp(self):
+        events = self.frames["events"].set_index("event_id")
+        self.assertEqual(
+            events.loc["event_shrestha_1962_congress", "org_id"], "ncp_unified"
+        )
+        self.assertEqual(events.loc["event_amatya_gs", "org_id"], "ncp_unified")
+
+        tenures = self.frames["tenures"].set_index("tenure_id")
+        self.assertEqual(
+            tenures.loc["shrestha_amatya_shared_leadership", "org_id"],
+            "ncp_unified",
+        )
+        self.assertEqual(
+            tenures.loc["amatya_unified_leadership", "org_id"], "ncp_unified"
+        )
+        self.assertEqual(
+            str(tenures.loc["amatya_branch_leadership", "start_date"].date()),
+            "1968-01-01",
+        )
+
+        relations = self.frames["organization_relations"].set_index("relation_id")
+        self.assertNotIn("relation_amatya_1962", relations.index)
+        self.assertEqual(
+            relations.loc["relation_amatya_1968", "source_org_id"], "ncp_unified"
+        )
+        self.assertEqual(
+            relations.loc["relation_amatya_1968", "target_org_id"], "ncp_amatya"
+        )
+        self.assertEqual(
+            relations.loc["relation_shrestha_1968", "source_org_id"], "ncp_unified"
+        )
+
     def test_all_fact_source_references_resolve(self):
         known_sources = set(self.frames["sources"]["source_id"])
         for table_name in ("events", "tenures", "organization_relations"):
