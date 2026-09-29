@@ -387,6 +387,39 @@ class RaimajhiHoverTest(unittest.TestCase):
                 len(org_ids),
             )
 
+    def test_requested_main_lane_order_keeps_congress_at_far_right(self):
+        expected = [
+            "lane_background",
+            "lane_ncp_unified",
+            "lane_masal",
+            "lane_mashal",
+            "lane_narayan_kaji",
+            "lane_prachanda",
+            "lane_people_front",
+            "lane_unity_centre_masal_singh",
+            "lane_raimajhi",
+            "lane_manandhar",
+            "lane_burma",
+            "lane_unity_congress",
+            "lane_amatya",
+            "lane_pradhan",
+            "lane_rohit",
+            "lane_bhandari",
+            "lane_uml",
+            "lane_nepali_congress",
+        ]
+        lanes = self.frames["organization_lanes"].copy()
+        lanes["display_order"] = lanes["display_order"].astype(int)
+        actual = list(
+            lanes.loc[lanes["lane_type"] == "main"]
+            .sort_values("display_order")["lane_id"]
+        )
+        self.assertEqual(actual, expected)
+        self.assertEqual(
+            list(self.figure.layout.meta["organization_lane_axis_ids"]), expected
+        )
+        self.assertEqual(actual[-1], "lane_nepali_congress")
+
     def test_composite_lane_headers_are_vertical_chronologies(self):
         headers = self.frames["organization_lane_headers"].copy()
         self.assertEqual(len(headers), 28)
