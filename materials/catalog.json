@@ -14,7 +14,7 @@
     "kind": "datasets",
     "scope": "local",
     "path": "materials/local/datasets/raimajhi-life",
-    "note": "含原书摘录、41个真实组织与组织—显示谱系映射，供本机图中悬浮说明使用。"
+    "note": "含原书摘录、41个真实组织、组织—显示谱系映射、25个背景政治实体与64个连续执政时期，供本机图中悬浮说明使用。"
   },
   {
     "id": "raimajhi-life-example",
@@ -22,6 +22,6 @@
     "kind": "datasets",
     "scope": "tracked",
     "path": "examples/raimajhi-life",
-    "note": "含事件、背景节点的书中摘录、41个真实组织及组织—显示谱系映射；可直接生成公开交互图。"
+    "note": "含事件与背景资料说明、41个真实组织、组织—显示谱系映射、25个背景政治实体及64个连续执政时期；可直接生成公开交互图。"
   }
 ]

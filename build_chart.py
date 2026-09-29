@@ -51,6 +51,7 @@ def load_data(data_dir: Path) -> dict[str, pd.DataFrame]:
         "organization_stages.csv",
         "organization_lanes.csv",
         "organization_lane_headers.csv",
+        "political_entities.csv",
     ):
         if (data_dir / optional_name).is_file():
             file_names.append(optional_name)
@@ -74,6 +75,38 @@ def load_data(data_dir: Path) -> dict[str, pd.DataFrame]:
 def validate_references(frames: dict[str, pd.DataFrame]) -> None:
     people = set(frames["people"]["person_id"])
     organizations = set(frames["organizations"]["org_id"])
+
+    political_entities = frames.get("political_entities", pd.DataFrame())
+    if not political_entities.empty:
+        required_entity_columns = {
+            "entity_id",
+            "name_zh",
+            "entity_type",
+            "organization_id",
+        }
+        missing_entity_columns = required_entity_columns - set(political_entities.columns)
+        if missing_entity_columns:
+            raise ValueError(
+                "political_entities.csv 缺少字段："
+                + str(sorted(missing_entity_columns))
+            )
+        if political_entities["entity_id"].duplicated().any():
+            raise ValueError("political_entities.csv 含重复 entity_id")
+        if political_entities["entity_id"].str.strip().eq("").any():
+            raise ValueError("political_entities.csv 的 entity_id 不得留空")
+        if political_entities["name_zh"].str.strip().eq("").any():
+            raise ValueError("political_entities.csv 的 name_zh 不得留空")
+        linked_organizations = {
+            value.strip()
+            for value in political_entities["organization_id"]
+            if value.strip()
+        }
+        unknown_linked_organizations = sorted(linked_organizations - organizations)
+        if unknown_linked_organizations:
+            raise ValueError(
+                "political_entities.csv 含未知 organization_id："
+                + str(unknown_linked_organizations)
+            )
 
     if "organization_lanes" in frames:
         if "lane_id" not in frames["organizations"].columns:
@@ -266,13 +299,101 @@ def validate_references(frames: dict[str, pd.DataFrame]) -> None:
             )
 
     if "background_events" in frames:
-        unknown_background_orgs = sorted(
-            set(frames["background_events"]["org_id"]) - organizations
+        backgrounds = frames["background_events"]
+        if political_entities.empty:
+            raise ValueError(
+                "存在 background_events.csv 时必须提供 political_entities.csv"
+            )
+        required_background_columns = {
+            "background_id",
+            "event_date",
+            "end_date",
+            "org_id",
+            "title",
+            "regime_type",
+            "head_of_state",
+            "head_of_government",
+            "lead_governing_entity_id",
+            "coalition_entity_ids",
+            "supporting_entity_ids",
+            "government_type",
+            "accession_basis",
+            "end_reason",
+            "description",
+            "india_relations",
+            "date_precision",
+            "source_id",
+            "source_excerpt",
+        }
+        missing_background_columns = required_background_columns - set(backgrounds.columns)
+        if missing_background_columns:
+            raise ValueError(
+                "background_events.csv 缺少字段："
+                + str(sorted(missing_background_columns))
+            )
+        if backgrounds["background_id"].duplicated().any():
+            raise ValueError("background_events.csv 含重复 background_id")
+        required_nonempty = required_background_columns - {
+            "coalition_entity_ids",
+            "supporting_entity_ids",
+        }
+        empty_required = sorted(
+            column
+            for column in required_nonempty
+            if backgrounds[column].astype(str).str.strip().eq("").any()
         )
+        if empty_required:
+            raise ValueError(
+                "background_events.csv 以下字段不得留空：" + str(empty_required)
+            )
+        unknown_background_orgs = sorted(set(backgrounds["org_id"]) - organizations)
         if unknown_background_orgs:
             raise ValueError(
                 "background_events.csv 含未知组织：" + str(unknown_background_orgs)
             )
+        if not political_entities.empty:
+            known_entities = set(political_entities["entity_id"])
+            used_entities = {
+                entity_id.strip()
+                for column in (
+                    "lead_governing_entity_id",
+                    "coalition_entity_ids",
+                    "supporting_entity_ids",
+                )
+                for values in backgrounds[column]
+                for entity_id in str(values).split(";")
+                if entity_id.strip()
+            }
+            unknown_entities = sorted(used_entities - known_entities)
+            if unknown_entities:
+                raise ValueError(
+                    "background_events.csv 含未知政治实体：" + str(unknown_entities)
+                )
+            if backgrounds["lead_governing_entity_id"].str.contains(";", regex=False).any():
+                raise ValueError("每个执政时期只能填写一个主要执政组织")
+        periods = backgrounds.sort_values("event_date").reset_index(drop=True)
+        if periods["end_date"].isna().any():
+            raise ValueError("background_events.csv 的执政时期必须填写 end_date")
+        if (periods["event_date"] >= periods["end_date"]).any():
+            raise ValueError("background_events.csv 的执政时期必须早于结束日期")
+        if len(periods) > 1:
+            previous_ends = periods["end_date"].iloc[:-1].reset_index(drop=True)
+            following_starts = periods["event_date"].iloc[1:].reset_index(drop=True)
+            if not previous_ends.equals(following_starts):
+                raise ValueError("background_events.csv 的执政时期存在空档或重叠")
+        if "sources" in frames:
+            known_sources = set(frames["sources"]["source_id"])
+            used_sources = {
+                source_id.strip()
+                for values in backgrounds["source_id"]
+                for source_id in str(values).split(";")
+                if source_id.strip()
+            }
+            unknown_sources = sorted(used_sources - known_sources)
+            if unknown_sources:
+                raise ValueError(
+                    "background_events.csv 含未知 source_id：" + str(unknown_sources)
+                )
 
     if "organization_stages" in frames:
         unknown_stage_orgs = sorted(
@@ -344,22 +465,43 @@ def build_event_hover(
     return heading + wrap_hover(row["description"]) + "<extra></extra>"
 
 
-def build_background_hover(row: pd.Series) -> str:
-    """Keep governmental authority and India relations distinct in context."""
-    parts = [f"<b>{escape(str(row['title']))}</b>"]
-    for column, label in (
-        ("governing_authority", "当权者"),
-        ("india_relations", "对印关系"),
-    ):
-        if column in row.index and str(row[column]).strip():
-            parts.append(f"<b>{label}：</b>{wrap_hover(row[column])}")
-    detail = (
-        row["source_excerpt"]
-        if "source_excerpt" in row.index and str(row["source_excerpt"]).strip()
-        else row["description"]
+def build_background_hover(
+    row: pd.Series,
+    political_entity_names: dict[str, str] | None = None,
+) -> str:
+    """Explain each governing period without conflating cabinet and support."""
+    political_entity_names = political_entity_names or {}
+
+    def entity_names(value: object) -> str:
+        return "、".join(
+            political_entity_names.get(entity_id, entity_id)
+            for entity_id in str(value).split(";")
+            if entity_id.strip()
+        )
+
+    period = (
+        f"{format_tenure_date(row['event_date'], row['date_precision'])}—"
+        f"{format_tenure_date(row['end_date'], row['date_precision'])}"
     )
-    if str(detail).strip():
-        parts.append(wrap_hover(detail))
+    parts = [f"<b>{escape(str(row['title']))}</b>", f"<b>时期：</b>{period}"]
+    for column, label, resolve_entities in (
+        ("regime_type", "政体", False),
+        ("head_of_state", "国家元首", False),
+        ("head_of_government", "政府首脑", False),
+        ("lead_governing_entity_id", "主要执政组织", True),
+        ("coalition_entity_ids", "联合执政", True),
+        ("supporting_entity_ids", "议会支持", True),
+        ("government_type", "政府性质", False),
+        ("accession_basis", "上台依据", False),
+        ("end_reason", "结束原因", False),
+        ("india_relations", "对印关系", False),
+        ("description", "与主图相关", False),
+        ("source_excerpt", "资料说明", False),
+    ):
+        if column not in row.index or not str(row[column]).strip():
+            continue
+        value = entity_names(row[column]) if resolve_entities else str(row[column])
+        parts.append(f"<b>{label}：</b>{wrap_hover(value)}")
     return "<br>".join(parts) + "<extra></extra>"
 
 
@@ -531,6 +673,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     stages = frames.get("organization_stages", pd.DataFrame()).copy()
     lanes = frames.get("organization_lanes", pd.DataFrame()).copy()
     lane_headers = frames.get("organization_lane_headers", pd.DataFrame()).copy()
+    political_entities = frames.get("political_entities", pd.DataFrame()).copy()
 
     organizations["display_order"] = organizations["display_order"].astype(int)
     organizations = organizations.sort_values("display_order")
@@ -804,7 +947,16 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             background_text_position = backgrounds["label_position"].replace(
                 "", "middle right"
             )
-        backgrounds["hover_text"] = backgrounds.apply(build_background_hover, axis=1)
+        political_entity_names = (
+            dict(zip(political_entities["entity_id"], political_entities["name_zh"]))
+            if not political_entities.empty
+            else {}
+        )
+        backgrounds["hover_text"] = backgrounds.apply(
+            build_background_hover,
+            axis=1,
+            political_entity_names=political_entity_names,
+        )
         if "end_date" in backgrounds.columns:
             period_x: list[float | None] = []
             period_y: list[str | None] = []

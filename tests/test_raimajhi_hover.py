@@ -94,10 +94,25 @@ class RaimajhiHoverTest(unittest.TestCase):
         self.assertNotIn("尼共（腊伊玛吉）", public_hover)
 
     def test_background_is_dimmed_and_structured(self):
-        backgrounds = self.frames["background_events"]
-        self.assertGreaterEqual(len(backgrounds), 15)
-        self.assertTrue(backgrounds["governing_authority"].str.strip().ne("").all())
-        self.assertTrue(backgrounds["india_relations"].str.strip().ne("").all())
+        backgrounds = self.frames["background_events"].sort_values("event_date")
+        self.assertGreaterEqual(len(backgrounds), 60)
+        for column in (
+            "regime_type",
+            "head_of_state",
+            "head_of_government",
+            "lead_governing_entity_id",
+            "government_type",
+            "accession_basis",
+            "end_reason",
+            "india_relations",
+        ):
+            self.assertTrue(backgrounds[column].str.strip().ne("").all(), column)
+        self.assertTrue(
+            (
+                backgrounds["end_date"].iloc[:-1].reset_index(drop=True)
+                == backgrounds["event_date"].iloc[1:].reset_index(drop=True)
+            ).all()
+        )
 
         background_traces = [
             trace
@@ -108,7 +123,23 @@ class RaimajhiHoverTest(unittest.TestCase):
         self.assertTrue(all(trace.opacity == 0.16 for trace in background_traces))
         point_trace = next(trace for trace in background_traces if trace.name == "政治背景")
         hovers = [item[0] for item in point_trace.customdata]
-        self.assertTrue(all("当权者：" in item and "对印关系：" in item for item in hovers))
+        for label in (
+            "时期：",
+            "政体：",
+            "国家元首：",
+            "政府首脑：",
+            "主要执政组织：",
+            "政府性质：",
+            "上台依据：",
+            "结束原因：",
+            "对印关系：",
+            "与主图相关：",
+            "资料说明：",
+        ):
+            self.assertTrue(all(label in item for item in hovers), label)
+        self.assertTrue(any("联合执政：" in item for item in hovers))
+        self.assertTrue(any("议会支持：" in item for item in hovers))
+        self.assertFalse(any("entity_" in item for item in hovers))
 
         known_sources = set(self.frames["sources"]["source_id"])
         used_sources = {
@@ -121,6 +152,81 @@ class RaimajhiHoverTest(unittest.TestCase):
             trace for trace in background_traces if trace.name == "政治背景时期"
         ]
         self.assertEqual(len(period_traces), 1)
+
+    def test_background_distinguishes_governing_coalitions_and_support(self):
+        backgrounds = self.frames["background_events"].set_index("background_id")
+        political_entities = self.frames["political_entities"]
+        known_entities = set(political_entities["entity_id"])
+        used_entities = {
+            entity_id
+            for column in (
+                "lead_governing_entity_id",
+                "coalition_entity_ids",
+                "supporting_entity_ids",
+            )
+            for values in self.frames["background_events"][column]
+            for entity_id in values.split(";")
+            if entity_id
+        }
+        self.assertFalse(used_entities - known_entities)
+
+        self.assertEqual(
+            backgrounds.loc["bg_1990_interim", "coalition_entity_ids"],
+            "entity_united_left_front;entity_royal_nominees;"
+            "entity_independent_intellectuals",
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_1994_adhikari", "government_type"],
+            "单一政党少数政府",
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_1995_deuba_i", "coalition_entity_ids"],
+            "entity_rpp;entity_nepal_sadbhavana_party",
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_1997_chand_ii", "supporting_entity_ids"],
+            "entity_ncp_uml",
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_1997_chand_ii", "coalition_entity_ids"], ""
+        )
+        self.assertIn(
+            "entity_ncp_uml",
+            backgrounds.loc["bg_2004_deuba_iii", "coalition_entity_ids"],
+        )
+        self.assertIn(
+            "entity_ncp_maoist",
+            backgrounds.loc["bg_2007_interim_maoist_in", "coalition_entity_ids"],
+        )
+        self.assertNotIn(
+            "entity_ncp_maoist",
+            backgrounds.loc["bg_2007_interim_maoist_out", "coalition_entity_ids"],
+        )
+        self.assertIn(
+            "entity_ncp_maoist",
+            backgrounds.loc[
+                "bg_2007_interim_maoist_return", "coalition_entity_ids"
+            ],
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_2010_madhav_caretaker", "government_type"],
+            "看守联合政府",
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_2011_khanal", "supporting_entity_ids"],
+            "entity_unified_ncp_maoist",
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_2011_khanal", "coalition_entity_ids"], ""
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_2011_bhattarai", "coalition_entity_ids"],
+            "entity_madhesi_parties",
+        )
+        self.assertEqual(
+            backgrounds.loc["bg_2012_bhattarai_caretaker", "government_type"],
+            "看守联合政府",
+        )
 
     def test_first_batch_has_people_events_tenures_and_focus_entries(self):
         person_ids = set(self.frames["people"]["person_id"])
@@ -163,10 +269,16 @@ class RaimajhiHoverTest(unittest.TestCase):
         self.assertTrue(
             all(f"{organization_count}个真实组织" in note for note in dataset_notes)
         )
+        self.assertTrue(all("25个背景政治实体" in note for note in dataset_notes))
+        self.assertTrue(all("64个连续执政时期" in note for note in dataset_notes))
 
         example_readme = (DATA_DIR / "README.md").read_text(encoding="utf-8")
         self.assertIn(f"保存{organization_count}个真实组织", example_readme)
         self.assertIn(f"另有{branch_lane_count}条支线", example_readme)
+        self.assertIn("64个首尾相接的时期", example_readme)
+
+        self.assertEqual(len(self.frames["political_entities"]), 25)
+        self.assertEqual(len(self.frames["background_events"]), 64)
 
         public_html = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
         self.assertEqual(public_html.count('"id": "sher_bahadur_deuba"'), 1)
