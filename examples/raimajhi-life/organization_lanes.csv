@@ -8,7 +8,7 @@ lane_unity_congress,尼共（统一大会）,#9467BD,5,,main,,
 lane_amatya,尼共（阿玛提亚）,#67708E,6,,main,,
 lane_pradhan,普拉丹谱系,#C45B94,7,列内2阶段,main,,
 lane_rohit,罗希特谱系,#E6AB02,8,列内2阶段,main,,
-lane_bhandari,班达里谱系,#17A589,9,列内2阶段,main,,
+lane_bhandari,班达里谱系,#17A589,9,列内3阶段,main,,
 lane_uml,尼共（联合马列）,#4C78A8,10,,main,,
 lane_nepali_congress,大会党〔列内6阶段〕,#AA4A5B,12,,main,,
 lane_nepal_democratic_congress_branch,尼泊尔民主大会党,#C06D7A,12,1948年分出并于1950年参与合并,branch,lane_nepali_congress,-0.28
@@ -22,3 +22,6 @@ lane_people_front,人民统一战线,#FB9A99,20,巴特拉伊派,main,,
 lane_people_front_vaidya,人民统一战线支线,#CAB2D6,20,尼·戈·维迪亚派,branch,lane_people_front,0.26
 lane_unity_centre_masal_singh,尼共（团结中心—Masal）,#854F74,22,辛格2006年另立,main,,
 lane_uml_pradhan_1998_branch,尼共（马列主义者）支线,#80B1D3,10,普拉丹等1998年另组,branch,lane_uml,-0.26
+lane_ncp_2006_branch,尼泊尔共产党（2006）,#8C6BB1,18,加瓦·库马尔派,branch,lane_narayan_kaji,-0.28
+lane_ncp_united_2006_branch,尼共（统一）支线,#9E7BB5,18,拉姆·辛格·什里斯派转入,branch,lane_narayan_kaji,0.28
+lane_ncp_maoist_2012_branch,尼共—毛,#B2182B,19,2012年6月分出,branch,lane_prachanda,0.28

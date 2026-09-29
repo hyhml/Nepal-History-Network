@@ -71,6 +71,7 @@ event_prachanda_strikes_1992,1992-04-06,prachanda,ncp_unity_centre,protest,全�
 event_prachanda_split_1994,1994-05-01,prachanda,ncp_unity_centre_prachanda,split,与原四大派发生路线分裂,1994年5月后不久另立同名组织；确切月份未载,uncertain,WTY-P47-P51,在武装革命道路问题上，尼莫·拉玛等原“四大”派仍主张俄国式城市革命。经过激烈斗争，1994年5月尼莫·拉玛等人被清除出党；不久普拉昌达和巴特拉伊决定脱离原来的尼共（团结中心），另立一个同名组织。,yes,middle right,-0.16,no
 event_prachanda_election_1994,1994-07-01,prachanda,ncp_unity_centre_prachanda,position,反对参加1994年中期选举,与巴特拉伊同持抵制立场,month,WTY-P54-P59,1994年7月议会解散后，人民统一战线内部在是否参加中期选举的问题上分裂。书中记载巴特拉伊同普拉昌达不赞成参加选举，尼·戈·维迪亚等人则主张参选，后者另立一个“人民统一战线”。,no,middle right,-0.16,no
 event_prachanda_maoist_1995,1995-03-01,prachanda,ncp_maoist,formation,改名尼共（毛）并任主席,中央委员会第三次扩大会议决定停止议会斗争并准备武装革命,month,WTY-P51-P52,1995年3月，普拉昌达领导的尼共（团结中心）和巴特拉伊领导的尼泊尔人民统一战线联合召开中央委员会第三次扩大会议，决定把党名改为尼泊尔共产党（毛泽东主义者），由普拉昌达担任党主席；会议决定停止议会斗争，准备发动武装革命，并通过《在尼泊尔开展武装斗争的战略与策略》决议。,yes,middle right,,no
+event_prachanda_split_2012,2012-06-01,prachanda,unified_ncp_maoist,split,统一尼共（毛）一分为二,普拉昌达领导的组织保留原名；分出组织称尼共—毛,month,WTY-P4,2012年6月，统一尼共（毛）一分为二。普拉昌达领导的党仍称统一尼共（毛），分裂出去的新党取名尼泊尔共产党—毛主义者，简称尼共—毛。当前材料这一段没有点名分裂派领导人。,yes,middle right,0,no
 event_baburam_join_fourth,1981-01-01,baburam_bhattarai,ncp_fourth_congress,membership,经尼莫·拉玛介绍加入尼共（四大）,节点同时承载出生、求学和早期政治活动,year,WTY-P52-P59,巴特拉伊1954年6月18日出生于戈尔卡县农民家庭，长期以优异成绩求学，后赴印度学习建筑、城市与区域规划并攻读博士。1977年在印度组织全印度尼泊尔学生联合会，1980年因抗议比兰德拉国王在新德里被捕；1981年经尼莫·拉玛介绍加入尼共（四大）。,yes,middle left,0,yes
 event_baburam_masal,1983-11-01,baburam_bhattarai,ncp_masal,formation,参加另建尼共（Masal）,与辛格、维迪亚、普拉昌达等参加单独会议,month,WTY-P36-P43,1983年11月，巴特拉伊参加辛格及其追随者召开的单独会议，离开尼共（四大）并另建尼共（Masal）。,yes,middle left,0,no
 event_baburam_fulltime,1986-01-01,baburam_bhattarai,ncp_masal,activity,回国成为全职干部,1986年和1988年两度因反政府活动被捕,year,WTY-P52-P59,巴特拉伊1986年完成学业回国，成为尼共（Masal）全职干部；1986年和1988年先后因反政府活动被捕。,yes,middle left,0,no
@@ -105,7 +106,7 @@ event_pradhan_split_1998,1998-01-01,sahana_pradhan,ncp_marxist_leninist_1998,spl
 event_pradhan_return_2002,2002-01-01,sahana_pradhan,ncp_uml,merge,并回尼共（联合马列）,次年进入中央委员会,year,WTY-P33,2002年尼共（马列主义者）并入尼共（联合马列），2003年普拉丹被选进中央委员会。,yes,middle left,0.16,no
 event_pradhan_ca_2008,2008-04-01,sahana_pradhan,ncp_uml,election,当选制宪议会代表,代表尼共（联合马列）,month,WTY-P33,2008年4月，萨哈娜·普拉丹代表尼共（联合马列）当选制宪议会代表。,yes,middle left,0.16,no
 event_bhandari_liberation,1976-01-01,madan_bhandari,liberation_front_group,formation,组建解放阵线团体,带领部分党员离开尼共（普·拉）,year,WTY-P33,1976年，学生领袖马丹·库马尔·班达里带领一部分党员离开什雷斯塔领导的尼共（普·拉），组建解放阵线团体。,yes,middle right,0,yes
-event_bhandari_coordination,1977-01-01,madan_bhandari,ncp_ml,merge,并入革命协调委员会,后来成为尼共（马列）主要创始人,year,WTY-P33,1977年，解放阵线团体并入全尼泊尔共产主义革命协调委员会（马列主义者）；班达里后来成为尼共（马列）主要创始人之一。,yes,middle right,0.16,no
+event_bhandari_coordination,1977-01-01,madan_bhandari,all_nepal_communist_revolutionary_coordination_committee_ml,merge,并入革命协调委员会,后来成为尼共（马列）主要创始人,year,WTY-P33,1977年，解放阵线团体并入全尼泊尔共产主义革命协调委员会（马列主义者）；班达里后来成为尼共（马列）主要创始人之一。原书未载协调委员会改组为尼共（马列）的具体年份。,yes,middle right,0.16,no
 event_bhandari_ml_gs,1986-01-01,madan_bhandari,ncp_ml,election,尼共（马列）四大当选总书记,成为党务领导人,year,WTY-P33,1986年，班达里在尼共（马列）四大上当选总书记。,yes,middle right,0.16,no
 event_bhandari_ulf,1990-01-15,madan_bhandari,ncp_ml,alliance,参加左翼联合阵线,其党为阵线中最大的共产党,day,WTY-P47-P51,1990年左翼联合阵线成立时，班达里领导的尼共（马列）是参加阵线的最大共产党组织。,no,middle right,0.16,no
 event_bhandari_uml,1991-01-01,madan_bhandari,ncp_uml,merge,参与组建联合马列并任总书记,尼共（马列）同尼共（马）合并,year,WTY-P33,1991年初，尼共（马列）与尼共（马）共同组建尼共（联合马列），班达里担任总书记。,yes,middle right,0,no

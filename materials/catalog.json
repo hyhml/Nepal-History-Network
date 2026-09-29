@@ -5,7 +5,7 @@
     "kind": "books",
     "scope": "local",
     "path": "materials/local/books/尼共毛（汪亭友）.pdf",
-    "note": "本图使用书内第27—59页的相关叙述；扫描PDF对应第39—71页。",
+    "note": "本图主要使用书内第27—59页的相关叙述，并以导论第4页补记2012年分裂；扫描PDF第27—59页对应文件第39—71页。",
     "sha256": "1b4bcb61cec2e79dc2c41387fad6986e79e996f55c8eb55cd41713af34ed6084"
   },
   {
@@ -14,7 +14,7 @@
     "kind": "datasets",
     "scope": "local",
     "path": "materials/local/datasets/raimajhi-life",
-    "note": "含原书摘录、37个真实组织与组织—显示谱系映射，供本机图中悬浮说明使用。"
+    "note": "含原书摘录、41个真实组织与组织—显示谱系映射，供本机图中悬浮说明使用。"
   },
   {
     "id": "raimajhi-life-example",
@@ -22,6 +22,6 @@
     "kind": "datasets",
     "scope": "tracked",
     "path": "examples/raimajhi-life",
-    "note": "含事件、背景节点的书中摘录、37个真实组织及组织—显示谱系映射；可直接生成公开交互图。"
+    "note": "含事件、背景节点的书中摘录、41个真实组织及组织—显示谱系映射；可直接生成公开交互图。"
   }
 ]

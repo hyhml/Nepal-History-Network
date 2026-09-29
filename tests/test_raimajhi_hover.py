@@ -155,8 +155,18 @@ class RaimajhiHoverTest(unittest.TestCase):
         dataset_titles = [
             entry["title"] for entry in catalog if entry["kind"] == "datasets"
         ]
+        dataset_notes = [
+            entry["note"] for entry in catalog if entry["kind"] == "datasets"
+        ]
         self.assertEqual(len(dataset_titles), 2)
         self.assertTrue(all("二十六位人物" in title for title in dataset_titles))
+        self.assertTrue(
+            all(f"{organization_count}个真实组织" in note for note in dataset_notes)
+        )
+
+        example_readme = (DATA_DIR / "README.md").read_text(encoding="utf-8")
+        self.assertIn(f"保存{organization_count}个真实组织", example_readme)
+        self.assertIn(f"另有{branch_lane_count}条支线", example_readme)
 
         public_html = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
         self.assertEqual(public_html.count('"id": "sher_bahadur_deuba"'), 1)
@@ -198,6 +208,7 @@ class RaimajhiHoverTest(unittest.TestCase):
         self.assertTrue(
             {
                 "relation_national_democratic_congress",
+                "relation_national_congress_merger",
                 "relation_democratic_congress_merger",
                 "relation_matrika_national_democratic",
             }
@@ -235,9 +246,11 @@ class RaimajhiHoverTest(unittest.TestCase):
                 "relation_manandhar_united",
                 "relation_united_uml",
                 "relation_pushpa_liberation",
-                "relation_liberation_ml",
+                "relation_liberation_coordination",
+                "relation_coordination_ml",
                 "relation_ml_uml",
                 "relation_fourth_masal",
+                "relation_fourth_mashal_1990",
                 "relation_masal_mashal",
                 "relation_mashal_unity_centre",
                 "relation_unity_people_front",
@@ -299,8 +312,11 @@ class RaimajhiHoverTest(unittest.TestCase):
                 "relation_masal_sharma",
                 "relation_sharma_maoist",
                 "relation_people_front_vaidya",
+                "relation_kawa_kumar_2006",
+                "relation_shris_united_2006",
                 "relation_unity_masal_unified",
                 "relation_maoist_unified",
+                "relation_unified_maoist_split_2012",
             }
             <= relation_ids
         )
@@ -348,13 +364,17 @@ class RaimajhiHoverTest(unittest.TestCase):
                 "unified_ncp_maoist",
             },
             "lane_pradhan": {"ncp_pushpa_lal", "ncp_marxist"},
-            "lane_bhandari": {"liberation_front_group", "ncp_ml"},
+            "lane_bhandari": {
+                "liberation_front_group",
+                "all_nepal_communist_revolutionary_coordination_committee_ml",
+                "ncp_ml",
+            },
             "lane_narayan_kaji": {
                 "ncp_unity_centre",
                 "ncp_unity_centre_masal",
             },
         }
-        self.assertEqual(len(self.frames["organization_lanes"]), 23)
+        self.assertEqual(len(self.frames["organization_lanes"]), 26)
         self.assertEqual(len(self.figure.layout.xaxis.tickvals), 18)
         lane_ids = set(self.frames["organization_lanes"]["lane_id"])
         self.assertFalse({"lane_central_nucleus", "lane_fourth_congress"} & lane_ids)
@@ -369,8 +389,8 @@ class RaimajhiHoverTest(unittest.TestCase):
 
     def test_composite_lane_headers_are_vertical_chronologies(self):
         headers = self.frames["organization_lane_headers"].copy()
-        self.assertEqual(len(headers), 25)
-        self.assertEqual(headers["lane_id"].nunique(), 9)
+        self.assertEqual(len(headers), 28)
+        self.assertEqual(headers["lane_id"].nunique(), 10)
         self.assertNotIn("label", headers.columns)
         self.assertEqual(
             set(headers["reference_type"]), {"stage", "organization"}
@@ -458,6 +478,9 @@ class RaimajhiHoverTest(unittest.TestCase):
             "united_peoples_front_vaidya": "lane_people_front_vaidya",
             "ncp_marxist_leninist_1998": "lane_uml_pradhan_1998_branch",
             "national_democratic_party": "lane_national_democratic_party_branch",
+            "ncp_2006_kawa_kumar": "lane_ncp_2006_branch",
+            "ncp_united_2006": "lane_ncp_united_2006_branch",
+            "ncp_maoist_2012": "lane_ncp_maoist_2012_branch",
         }
         for org_id, lane_id in expected.items():
             self.assertEqual(organizations.loc[org_id, "lane_id"], lane_id)
@@ -470,7 +493,7 @@ class RaimajhiHoverTest(unittest.TestCase):
 
     def test_lineage_stages_keep_person_specific_focus_metadata(self):
         stages = self.frames["organization_stages"]
-        self.assertEqual(len(stages), 29)
+        self.assertEqual(len(stages), 35)
         labels = set(stages["label"])
         self.assertTrue(
             {
@@ -484,6 +507,12 @@ class RaimajhiHoverTest(unittest.TestCase):
                 "尼共（马列）",
                 "尼共（团结中心—Masal）",
                 "尼共（团结中心）（纳拉扬·卡吉派）",
+                "全尼泊尔共产主义革命协调委员会（马列主义者）",
+                "尼泊尔人民统一战线〔初建政治阵线〕",
+                "尼泊尔人民统一战线〔巴特拉伊重建〕",
+                "尼泊尔共产党（2006）",
+                "尼共（统一）〔什里斯派转入〕",
+                "尼共—毛〔2012年分出〕",
             }
             <= labels
         )
@@ -498,6 +527,95 @@ class RaimajhiHoverTest(unittest.TestCase):
         script = build_focus_post_script(self.frames["people"])
         self.assertIn("item.related_person_ids", script)
         self.assertIn("focus_stage_annotations", script)
+
+    def test_seven_accepted_lineage_clarifications_stay_explicit(self):
+        organizations = self.frames["organizations"].set_index("org_id")
+        relations = self.frames["organization_relations"].set_index("relation_id")
+        stages = self.frames["organization_stages"].set_index("stage_id")
+        tenures = self.frames["tenures"].set_index("tenure_id")
+        events = self.frames["events"].set_index("event_id")
+
+        self.assertEqual(relations.loc["relation_united_uml", "relation_type"], "partial_merge")
+        self.assertEqual(str(stages.loc["stage_manandhar_united", "end_date"].date()), "2005-01-01")
+
+        self.assertEqual(relations.loc["relation_fourth_mashal_1990", "relation_type"], "partial_merge")
+        self.assertIn("大部分", relations.loc["relation_fourth_mashal_1990", "description"])
+        self.assertEqual(relations.loc["relation_fourth_unity_centre", "relation_type"], "partial_merge")
+        self.assertIn("一小部分", relations.loc["relation_fourth_unity_centre", "description"])
+
+        self.assertEqual(
+            organizations.loc["ncp_maoist_2012", "lane_id"],
+            "lane_ncp_maoist_2012_branch",
+        )
+        self.assertEqual(
+            events.loc["event_prachanda_split_2012", "org_id"],
+            "unified_ncp_maoist",
+        )
+        self.assertNotIn(
+            "mohan_vaidya",
+            relations.loc["relation_unified_maoist_split_2012", "related_person_ids"],
+        )
+
+        self.assertEqual(
+            events.loc["event_bhandari_coordination", "org_id"],
+            "all_nepal_communist_revolutionary_coordination_committee_ml",
+        )
+        self.assertEqual(
+            tenures.loc["bhandari_coordination", "org_id"],
+            "all_nepal_communist_revolutionary_coordination_committee_ml",
+        )
+        self.assertEqual(str(tenures.loc["bhandari_ml", "start_date"].date()), "1986-01-01")
+        self.assertEqual(relations.loc["relation_coordination_ml", "date_precision"], "uncertain")
+
+        self.assertEqual(
+            organizations.loc["ncp_2006_kawa_kumar", "lane_id"],
+            "lane_ncp_2006_branch",
+        )
+        self.assertEqual(
+            organizations.loc["ncp_united_2006", "lane_id"],
+            "lane_ncp_united_2006_branch",
+        )
+
+        self.assertEqual(tenures.loc["baburam_people_front_initial", "track"], "front")
+        self.assertEqual(tenures.loc["baburam_people_front_rebuilt", "track"], "front")
+        self.assertEqual(relations.loc["relation_front_maoist", "relation_type"], "cofounded")
+        self.assertEqual(
+            stages.loc["stage_people_front_initial", "end_date"],
+            stages.loc["stage_people_front_rebuilt", "start_date"],
+        )
+        front_hovers = [
+            trace.text[0]
+            for trace in self.figure.data
+            if isinstance(trace.meta, dict)
+            and trace.meta.get("person_id") == "baburam_bhattarai"
+            and trace.mode == "lines"
+            and len(trace.x) == 2
+            and "人民统一战线" in str(trace.text[0])
+        ]
+        self.assertTrue(front_hovers)
+        self.assertTrue(all("政治阵线任职" in hover for hover in front_hovers))
+
+        self.assertEqual(
+            relations.loc["relation_national_congress_merger", "target_org_id"],
+            "nepali_congress",
+        )
+        self.assertEqual(
+            relations.loc["relation_democratic_congress_merger", "target_org_id"],
+            "nepali_congress",
+        )
+
+        partial_trace = next(
+            trace
+            for trace in self.figure.data
+            if "<b>部分并入</b>" in str(trace.hovertemplate)
+        )
+        cofounded_trace = next(
+            trace
+            for trace in self.figure.data
+            if "<b>共同组建</b>" in str(trace.hovertemplate)
+        )
+        self.assertEqual(partial_trace.line.dash, "dot")
+        self.assertEqual(cofounded_trace.line.dash, "dash")
 
     def test_prachanda_is_the_default_focus(self):
         script = build_focus_post_script(self.frames["people"])

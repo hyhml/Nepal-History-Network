@@ -14,7 +14,8 @@ lane_pradhan,2,stage,stage_pradhan_marxist,no
 lane_rohit,1,stage,stage_rohit_workers_org,no
 lane_rohit,2,stage,stage_rohit_workers_party,yes
 lane_bhandari,1,stage,stage_bhandari_liberation,no
-lane_bhandari,2,stage,stage_bhandari_ml,yes
+lane_bhandari,2,stage,stage_bhandari_coordination,no
+lane_bhandari,3,stage,stage_bhandari_ml,yes
 lane_nepali_congress,1,organization,all_india_nepal_national_congress,no
 lane_nepali_congress,2,organization,nepal_national_congress,no
 lane_nepali_congress,3,organization,nepali_congress,yes
@@ -24,3 +25,5 @@ lane_narayan_kaji,3,stage,stage_narayan_kaji_unity_masal,no
 lane_prachanda,1,stage,stage_prachanda_unity,no
 lane_prachanda,2,stage,stage_prachanda_maoist,yes
 lane_prachanda,3,stage,stage_prachanda_unified,no
+lane_people_front,1,stage,stage_people_front_initial,no
+lane_people_front,2,stage,stage_people_front_rebuilt,yes

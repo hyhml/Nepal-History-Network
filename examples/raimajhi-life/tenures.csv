@@ -29,7 +29,8 @@ prachanda_unity_centre_faction,prachanda,ncp_unity_centre_prachanda,另立同名
 baburam_fourth_congress,baburam_bhattarai,ncp_fourth_congress,党员,1981-01-01,1983-11-01,mixed,reported,WTY-P52-P59,1981年经尼莫·拉玛介绍加入；1983年11月参加另建Masal,political,solid,0.16
 baburam_masal,baburam_bhattarai,ncp_masal,全职干部／主要成员,1983-11-01,1991-01-01,mixed,reported,WTY-P36-P39,参与1983年另建；1986年完成学业回国后成为全职干部；1991年脱离并加入团结中心,political,solid,0.16
 baburam_unity_centre,baburam_bhattarai,ncp_unity_centre,主要领导人,1991-01-01,1994-05-01,year,uncertain,WTY-P39-P43,1991年带领Masal一小部分加入；1994年与普拉昌达另立同名组织,political,dash,0.16
-baburam_people_front,baburam_bhattarai,united_peoples_front,召集人／主席,1991-01-01,1995-03-01,mixed,reported,WTY-P52-P59,1991年初任召集人；8月17日重建并任主席；1995年与普拉昌达派共同建立尼共（毛）,front,solid,0
+baburam_people_front_initial,baburam_bhattarai,united_peoples_front,初建政治阵线召集人,1991-01-01,1991-08-17,mixed,reported,WTY-P52-P59,1991年初团结中心联合尼泊尔工农组织和尼共（马列毛）组建政治阵线，巴特拉伊任召集人；后两组织不久退出,front,solid,0
+baburam_people_front_rebuilt,baburam_bhattarai,united_peoples_front,重建政治阵线主席,1991-08-17,1995-03-01,mixed,reported,WTY-P52-P59,1991年8月17日重建并任主席；1995年与普拉昌达派共同建立尼共（毛）,front,solid,0
 baburam_unity_faction,baburam_bhattarai,ncp_unity_centre_prachanda,主要领导人,1994-05-01,1995-03-01,mixed,uncertain,WTY-P47-P51,与普拉昌达另立同名团结中心；确切分裂日未载,political,dash,0.16
 baburam_maoist,baburam_bhattarai,ncp_maoist,主要领导人／党内二号领导人,1995-03-01,2012-12-31,mixed,uncertain,WTY-P52-P59,书中称尼共（毛）创立后一直是仅次于普拉昌达的领导人；终点为当前图示边界,political,dash,0.16
 amatya_ncp_leadership,tulsi_lal_amatya,ncp_unified,中央领导人,1960-01-01,1962-04-01,mixed,uncertain,WTY-P30,1960年党禁后被迫转移印度；书中未给出进入领导层的确切日期,political,dash,0.16
@@ -47,7 +48,8 @@ pradhan_uml_first,sahana_pradhan,ncp_uml,领导成员,1991-01-01,1998-01-01,year
 pradhan_marxist_leninist,sahana_pradhan,ncp_marxist_leninist_1998,创建者／主要领导人,1998-01-01,2002-01-01,year,reported,WTY-P33,与联合马列的一部分党员组建；2002年并回联合马列,political,solid,0
 pradhan_uml_return,sahana_pradhan,ncp_uml,中央委员／制宪议会代表,2002-01-01,2008-04-01,mixed,uncertain,WTY-P33,2002年并回；2003年进入中央委员会；2008年4月当选制宪议会代表,political,dash,0.16
 bhandari_liberation_front,madan_bhandari,liberation_front_group,创建者／学生领袖,1976-01-01,1977-01-01,year,reported,WTY-P33,带领部分党员离开尼共（普·拉）后组建；1977年并入全尼泊尔共产主义革命协调委员会（马列主义者）,political,solid,0
-bhandari_ml,madan_bhandari,ncp_ml,主要创始人／1986年起任总书记,1977-01-01,1991-01-01,year,uncertain,WTY-P33,解放阵线团体1977年并入协调委员会；后来成为尼共（马列）主要创始人之一,political,dash,0.16
+bhandari_coordination,madan_bhandari,all_nepal_communist_revolutionary_coordination_committee_ml,成员／尼共（马列）主要创始人之一,1977-01-01,1986-01-01,year,uncertain,WTY-P33,1977年随解放阵线团体并入协调委员会；终点以原书首次明确记载尼共（马列）四大的1986年定位，不代表确切改组年份,political,dash,0.16
+bhandari_ml,madan_bhandari,ncp_ml,主要创始人／1986年起任总书记,1986-01-01,1991-01-01,year,uncertain,WTY-P33,原书未载协调委员会改组为尼共（马列）的具体年份；1986年在尼共（马列）四大当选总书记,political,dash,0.16
 bhandari_uml,madan_bhandari,ncp_uml,总书记,1991-01-01,1993-01-01,year,reported,WTY-P33,联合组建联合马列后任总书记；1993年因车祸去世,political,solid,0
 manandhar_raimajhi,bishnu_manandhar,ncp_raimajhi,政治局委员,1979-04-01,1981-01-01,mixed,reported,WTY-P32,学潮期间主张反对国王专制并同腊伊玛吉冲突；1981年带领多数党员脱离,political,solid,0.16
 manandhar_party,bishnu_manandhar,ncp_manandhar,创建者／总书记,1981-01-01,1991-07-01,mixed,reported,WTY-P32,1981年另立；1991年改名尼共（民主派），随后参与组建尼共（联合）,political,solid,0

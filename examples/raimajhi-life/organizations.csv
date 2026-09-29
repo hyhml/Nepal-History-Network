@@ -14,6 +14,7 @@ ncp_pushpa_lal,尼共（普·拉）,尼共（普·拉）,#C45B94,8,,lane_pradhan
 nepal_workers_peasants_org,尼泊尔工农组织,尼泊尔工农组织,#E6AB02,9,罗希特领导的组织,lane_rohit
 nepal_workers_peasants_party,尼泊尔工农党,尼泊尔工农党,#A6761D,10,罗希特1991年改名,lane_rohit
 liberation_front_group,解放阵线团体,解放阵线团体,#33A02C,11,,lane_bhandari
+all_nepal_communist_revolutionary_coordination_committee_ml,全尼泊尔共产主义革命协调委员会（马列主义者）,革命协调委员会（马列）,#55A868,12,1977年接纳解放阵线团体；改组为尼共（马列）的具体年份原书未载,lane_bhandari
 ncp_marxist,尼共（马）,尼共（马）,#8C564B,12,,lane_pradhan
 ncp_ml,尼共（马列）,尼共（马列）,#17A589,13,,lane_bhandari
 ncp_uml,尼共（联合马列）,尼共（联合马列）,#4C78A8,14,,lane_uml
@@ -30,9 +31,12 @@ ncp_masal_sharma,尼共（Masal）,尼共（Masal）,#B07AA1,20,迪纳·纳特·
 ncp_mashal,尼共（Mashal）,尼共（Mashal）,#BC7C12,21,,lane_mashal
 ncp_unity_centre,尼共（团结中心）,尼共（团结中心）,#B279A2,22,1990年组建／原组织,lane_narayan_kaji
 ncp_unity_centre_prachanda,尼共（团结中心）,尼共（团结中心）,#9C4F8D,23,普拉昌达等1994年另立,lane_prachanda
-united_peoples_front,尼泊尔人民统一战线,人民统一战线,#FB9A99,24,巴特拉伊1991年重建并任主席,lane_people_front
-united_peoples_front_vaidya,尼泊尔人民统一战线,人民统一战线,#CAB2D6,25,尼兰詹·戈文达·维迪亚1994年另立,lane_people_front_vaidya
+united_peoples_front,尼泊尔人民统一战线,人民统一战线〔政治阵线〕,#FB9A99,24,1991年初由多组织建立，部分成员退出后由巴特拉伊于8月17日重建,lane_people_front
+united_peoples_front_vaidya,尼泊尔人民统一战线,人民统一战线〔参选派政治阵线〕,#CAB2D6,25,尼兰詹·戈文达·维迪亚1994年另立,lane_people_front_vaidya
 ncp_maoist,尼共（毛）,尼共（毛）,#C51B29,26,,lane_prachanda
 ncp_unity_centre_masal,尼共（团结中心—Masal）,尼共（团结中心—Masal）,#7B4173,27,2002年联合组建／2006年后什雷斯塔派,lane_narayan_kaji
 ncp_unity_centre_masal_singh,尼共（团结中心—Masal）,尼共（团结中心—Masal）,#854F74,28,辛格2006年另立,lane_unity_centre_masal_singh
 unified_ncp_maoist,统一尼共（毛）,统一尼共（毛）,#E31A1C,29,2009年初成立,lane_prachanda
+ncp_2006_kawa_kumar,尼泊尔共产党（2006）,尼泊尔共产党（2006）,#8C6BB1,30,2006年团结中心—Masal四路分裂时由加瓦·库马尔领导,lane_ncp_2006_branch
+ncp_united_2006,尼共（统一）,尼共（统一）〔什里斯派转入〕,#9E7BB5,31,2006年拉姆·辛格·什里斯派转入的组织,lane_ncp_united_2006_branch
+ncp_maoist_2012,尼泊尔共产党—毛主义者,尼共—毛,#B2182B,32,2012年6月从统一尼共（毛）分出；当前材料段落未点名该派领导人,lane_ncp_maoist_2012_branch

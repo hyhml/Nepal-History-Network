@@ -229,6 +229,22 @@ def validate_references(frames: dict[str, pd.DataFrame]) -> None:
             raise ValueError(f"{table_name}.csv 含未知 org_id：{unknown_orgs}")
 
     relations = frames["organization_relations"]
+    allowed_relation_types = {
+        "split",
+        "merge",
+        "partial_merge",
+        "renamed",
+        "formalized",
+        "cofounded",
+    }
+    unknown_relation_types = sorted(
+        set(relations["relation_type"]) - allowed_relation_types
+    )
+    if unknown_relation_types:
+        raise ValueError(
+            "organization_relations.csv 含未知 relation_type："
+            + str(unknown_relation_types)
+        )
     relation_orgs = set(relations["source_org_id"]) | set(relations["target_org_id"])
     unknown_relation_orgs = sorted(relation_orgs - organizations)
     if unknown_relation_orgs:
@@ -854,6 +870,11 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             category = "党外任职" if tenure.person_id == "raimajhi" else "政府任职"
             # Government offices use the party lane for positioning only.
             hover_heading = f"<b>{escape(person_name)}</b><br><b>{category}</b>"
+        elif tenure.track == "front":
+            hover_heading = (
+                f"<b>{escape(person_name)}</b><br><b>政治阵线任职</b>"
+                f"<br>{escape(org_name)}{org_context}"
+            )
         else:
             hover_heading = (
                 f"<b>{escape(person_name)}</b><br><b>党内任职</b>"
@@ -925,8 +946,10 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     relation_labels = {
         "split": "分裂",
         "merge": "合并",
+        "partial_merge": "部分并入",
         "renamed": "改名",
         "formalized": "正式另立",
+        "cofounded": "共同组建",
     }
     for relation in relations.itertuples(index=False):
         related_person_ids = [
@@ -945,12 +968,13 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         target_x = x_for_org[relation.target_org_id]
         if source_x == target_x:
             continue
+        relation_dash = "dot" if relation.relation_type == "partial_merge" else "dash"
         fig.add_trace(
             go.Scatter(
                 x=[source_x, target_x],
                 y=[relation.event_date, relation.event_date],
                 mode="lines",
-                line={"color": "#7A5195", "width": 3, "dash": "dash"},
+                line={"color": "#7A5195", "width": 3, "dash": relation_dash},
                 hovertemplate=(
                     f"<b>{relation_labels.get(relation.relation_type, relation.relation_type)}</b>"
                     f"<br>{name_for_org[relation.source_org_id]} → "
