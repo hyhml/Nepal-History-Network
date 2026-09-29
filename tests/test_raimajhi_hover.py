@@ -360,6 +360,39 @@ class RaimajhiHoverTest(unittest.TestCase):
                 len(org_ids),
             )
 
+    def test_composite_lane_headers_are_vertical_chronologies(self):
+        headers = self.frames["organization_lane_headers"].copy()
+        self.assertEqual(len(headers), 25)
+        self.assertEqual(headers["lane_id"].nunique(), 9)
+        primary_counts = (
+            headers.assign(_primary=headers["is_primary"].eq("yes"))
+            .groupby("lane_id")["_primary"]
+            .sum()
+        )
+        self.assertTrue(primary_counts.eq(1).all())
+
+        lane_ids = list(self.figure.layout.meta["organization_lane_axis_ids"])
+        tick_texts = dict(zip(lane_ids, self.figure.layout.xaxis.ticktext))
+        self.assertEqual(self.figure.layout.xaxis.tickangle, 0)
+        self.assertGreaterEqual(self.figure.layout.margin.t, 280)
+
+        for lane_id, rows in headers.groupby("lane_id"):
+            rows = rows.sort_values("header_order")
+            tick = tick_texts[lane_id]
+            labels = list(rows["label"])
+            self.assertEqual(tick.count("↓"), len(labels) - 1)
+            positions = [tick.index(label) for label in labels]
+            self.assertEqual(positions, sorted(positions))
+            primary = rows.loc[rows["is_primary"] == "yes", "label"].item()
+            self.assertIn(f"<b>{primary}</b>", tick)
+
+        self.assertNotIn("↓", tick_texts["lane_burma"])
+        congress_tick = tick_texts["lane_nepali_congress"]
+        self.assertIn("全印尼泊尔国民大会党", congress_tick)
+        self.assertIn("尼泊尔国民大会党", congress_tick)
+        self.assertIn("<b>大会党</b>", congress_tick)
+        self.assertNotIn("党禁时期", congress_tick)
+
     def test_short_lived_single_person_orgs_are_branch_nodes(self):
         lanes = self.frames["organization_lanes"].set_index("lane_id")
         organizations = self.frames["organizations"].set_index("org_id")

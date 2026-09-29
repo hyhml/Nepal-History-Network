@@ -8,4 +8,6 @@
 
 `organization_relations.csv` 和 `organization_stages.csv` 的 `related_person_ids` 支持用分号关联多人。选中关联人物时，对应的组织分合线、阶段分隔线和名称一起高亮。
 
+`organization_lane_headers.csv` 保存复合主列的列头顺序。每列名称按时间向下排列并用箭头连接，`is_primary=yes` 的代表性组织以粗体显示；大会党只列三个真实组织名称，不重复列出同一组织的政治阶段。
+
 `organizations.csv` 保存34个真实组织，`organization_lanes.csv` 将其中具有连续领导和继承关系的组织映射为共同主列。统一尼共、尼共中央核心小组和尼共（四大）共用尼共谱系列，大会党的前身和后续阶段共用大会党主列；尼泊尔民主大会党、国家民主党及原有三个短命组织作为支线挂在主列旁。公开图因此使用18条主列，另有5条支线；悬浮框和关系数据仍显示具体组织名称。

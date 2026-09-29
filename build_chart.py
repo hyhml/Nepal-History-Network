@@ -50,6 +50,7 @@ def load_data(data_dir: Path) -> dict[str, pd.DataFrame]:
         "background_events.csv",
         "organization_stages.csv",
         "organization_lanes.csv",
+        "organization_lane_headers.csv",
     ):
         if (data_dir / optional_name).is_file():
             file_names.append(optional_name)
@@ -109,6 +110,47 @@ def validate_references(frames: dict[str, pd.DataFrame]) -> None:
         parent_types = dict(zip(lane_table["lane_id"], lane_table["lane_type"]))
         if any(parent_types.get(parent) == "branch" for parent in branch_rows["parent_lane_id"]):
             raise ValueError("组织支线的 parent_lane_id 必须指向主列")
+
+        if "organization_lane_headers" in frames:
+            headers = frames["organization_lane_headers"]
+            required_header_columns = {"lane_id", "header_order", "label", "is_primary"}
+            missing_header_columns = required_header_columns - set(headers.columns)
+            if missing_header_columns:
+                raise ValueError(
+                    "organization_lane_headers.csv 缺少字段："
+                    + str(sorted(missing_header_columns))
+                )
+            unknown_header_lanes = sorted(set(headers["lane_id"]) - lanes)
+            if unknown_header_lanes:
+                raise ValueError(
+                    "organization_lane_headers.csv 含未知 lane_id："
+                    + str(unknown_header_lanes)
+                )
+            branch_header_lanes = sorted(
+                lane_id
+                for lane_id in set(headers["lane_id"])
+                if parent_types.get(lane_id) == "branch"
+            )
+            if branch_header_lanes:
+                raise ValueError(
+                    "复合列头只能用于主列：" + str(branch_header_lanes)
+                )
+            if headers.duplicated(["lane_id", "header_order"]).any():
+                raise ValueError("复合列头的 lane_id 与 header_order 组合必须唯一")
+            invalid_primary = sorted(
+                set(headers["is_primary"].str.lower()) - {"yes", "no"}
+            )
+            if invalid_primary:
+                raise ValueError("复合列头的 is_primary 只能是 yes 或 no")
+            primary_counts = (
+                headers.assign(
+                    _primary=headers["is_primary"].str.lower().eq("yes")
+                )
+                .groupby("lane_id")["_primary"]
+                .sum()
+            )
+            if not primary_counts.eq(1).all():
+                raise ValueError("每个复合列头必须且只能标记一个主要组织")
 
     for table_name in ("tenures", "events"):
         table = frames[table_name]
@@ -251,6 +293,47 @@ def format_tenure_date(value: pd.Timestamp, precision: str) -> str:
     return f"{value.year}年{value.month}月{value.day}日"
 
 
+def build_lane_tick_texts(
+    display_lanes: pd.DataFrame,
+    lane_headers: pd.DataFrame,
+) -> tuple[list[str], int]:
+    """Render composite lane names as horizontal text in a vertical chronology."""
+    entries_by_lane: dict[str, list[object]] = {}
+    if not lane_headers.empty:
+        ordered = lane_headers.copy()
+        ordered["header_order"] = ordered["header_order"].astype(int)
+        ordered = ordered.sort_values(["lane_id", "header_order"])
+        for lane_id, rows in ordered.groupby("lane_id", sort=False):
+            entries_by_lane[lane_id] = list(rows.itertuples(index=False))
+
+    tick_texts: list[str] = []
+    max_entries = 1
+    for lane in display_lanes.itertuples(index=False):
+        entries = entries_by_lane.get(lane.lane_id, [])
+        if entries:
+            max_entries = max(max_entries, len(entries))
+            labels = []
+            for entry in entries:
+                label = escape(str(entry.label))
+                if str(entry.is_primary).lower() == "yes":
+                    label = f"<b>{label}</b>"
+                labels.append(f"<span style='white-space:nowrap'>{label}</span>")
+            tick_texts.append(
+                "<br><span style='font-size:12px;color:#64748b'>↓</span><br>".join(labels)
+            )
+            continue
+
+        tick_texts.append(
+            escape(lane.short_name)
+            + (
+                f"<br><span style='font-size:11px;color:#64748b'>〔{escape(lane.branch_note)}〕</span>"
+                if getattr(lane, "branch_note", "")
+                else ""
+            )
+        )
+    return tick_texts, max_entries
+
+
 def spread_event_nodes(
     events: pd.DataFrame,
     base_x: list[float],
@@ -301,6 +384,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     backgrounds = frames.get("background_events", pd.DataFrame()).copy()
     stages = frames.get("organization_stages", pd.DataFrame()).copy()
     lanes = frames.get("organization_lanes", pd.DataFrame()).copy()
+    lane_headers = frames.get("organization_lane_headers", pd.DataFrame()).copy()
 
     organizations["display_order"] = organizations["display_order"].astype(int)
     organizations = organizations.sort_values("display_order")
@@ -348,8 +432,12 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
     lane_type_for_org = {
         org_id: lane_type_by_id[lane_id] for org_id, lane_id in lane_for_org.items()
     }
+    lane_tick_texts, max_header_entries = build_lane_tick_texts(
+        display_lanes, lane_headers
+    )
     chart_height = max(1500, min(2400, 850 + len(events) * 13))
-    chart_width = max(1450, len(display_lanes) * 125 + 330)
+    chart_width = max(1600, len(display_lanes) * 210 + 330)
+    top_margin = 205 + max(0, max_header_entries - 2) * 38
     x_range_width = (
         display_lanes["display_order"].max()
         - display_lanes["display_order"].min()
@@ -843,7 +931,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         height=chart_height,
         width=chart_width,
         autosize=False,
-        margin={"l": 100, "r": 330, "t": 195, "b": 80},
+        margin={"l": 100, "r": 330, "t": top_margin, "b": 80},
         hovermode="closest",
         hoverlabel={
             "align": "left",
@@ -855,15 +943,8 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "title": "党派／组织",
             "tickmode": "array",
             "tickvals": display_lanes["display_order"].tolist(),
-            "ticktext": [
-                escape(row.short_name)
-                + (
-                    f"<br><span style='font-size:11px;color:#64748b'>〔{escape(row.branch_note)}〕</span>"
-                    if getattr(row, "branch_note", "") else ""
-                )
-                for row in display_lanes.itertuples(index=False)
-            ],
-            "tickangle": -50,
+            "ticktext": lane_tick_texts,
+            "tickangle": 0,
             "range": [display_lanes["display_order"].min() - 0.6, display_lanes["display_order"].max() + 0.6],
             "side": "top",
             "showgrid": True,
