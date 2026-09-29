@@ -1,6 +1,6 @@
 lane_id,short_name,color,display_order,branch_note,lane_type,parent_lane_id,branch_offset
 lane_background,背景,#4D4D4D,0,,main,,
-lane_ncp_unified,尼共,#B22222,1,统一时期,main,,
+lane_ncp_unified,尼共谱系,#B22222,1,列内3阶段,main,,
 lane_raimajhi,腊伊玛吉谱系,#1F77B4,2,列内4阶段,main,,
 lane_manandhar,马南达尔谱系,#2CA02C,3,列内3阶段,main,,
 lane_burma,尼共（布尔玛）,#D95F02,4,,main,,
@@ -13,8 +13,6 @@ lane_uml,尼共（联合马列）,#4C78A8,10,,main,,
 lane_nepali_congress,大会党〔列内6阶段〕,#AA4A5B,12,,main,,
 lane_nepal_democratic_congress_branch,尼泊尔民主大会党,#C06D7A,12,1948年分出并于1950年参与合并,branch,lane_nepali_congress,-0.28
 lane_national_democratic_party_branch,国家民主党,#5E8C6A,12,马·普·柯伊拉腊另组,branch,lane_nepali_congress,0.28
-lane_central_nucleus,尼共中央核心小组,#6B8E23,13,,main,,
-lane_fourth_congress,尼共（四大）,#A66A2E,14,,main,,
 lane_masal,尼共（Masal）,#9C755F,15,辛格领导,main,,
 lane_masal_sharma,尼共（Masal）支线,#B07AA1,15,夏尔玛1999年另组,branch,lane_masal,0.26
 lane_mashal,尼共（Mashal）,#BC7C12,17,,main,,

@@ -322,9 +322,14 @@ class RaimajhiHoverTest(unittest.TestCase):
         ]
         self.assertLessEqual(len(transition_traces), 2 * len(self.frames["people"]))
 
-    def test_six_lineages_share_display_lanes_without_merging_data(self):
+    def test_lineages_share_display_lanes_without_merging_data(self):
         organizations = self.frames["organizations"].set_index("org_id")
         expected_groups = {
+            "lane_ncp_unified": {
+                "ncp_unified",
+                "ncp_central_nucleus",
+                "ncp_fourth_congress",
+            },
             "lane_rohit": {
                 "nepal_workers_peasants_org",
                 "nepal_workers_peasants_party",
@@ -342,8 +347,10 @@ class RaimajhiHoverTest(unittest.TestCase):
                 "ncp_unity_centre_masal",
             },
         }
-        self.assertEqual(len(self.frames["organization_lanes"]), 25)
-        self.assertEqual(len(self.figure.layout.xaxis.tickvals), 20)
+        self.assertEqual(len(self.frames["organization_lanes"]), 23)
+        self.assertEqual(len(self.figure.layout.xaxis.tickvals), 18)
+        lane_ids = set(self.frames["organization_lanes"]["lane_id"])
+        self.assertFalse({"lane_central_nucleus", "lane_fourth_congress"} & lane_ids)
         for lane_id, org_ids in expected_groups.items():
             self.assertEqual(
                 set(organizations.loc[list(org_ids), "lane_id"]), {lane_id}
@@ -373,10 +380,13 @@ class RaimajhiHoverTest(unittest.TestCase):
 
     def test_lineage_stages_keep_person_specific_focus_metadata(self):
         stages = self.frames["organization_stages"]
-        self.assertEqual(len(stages), 26)
+        self.assertEqual(len(stages), 29)
         labels = set(stages["label"])
         self.assertTrue(
             {
+                "尼共〔统一时期〕",
+                "尼共中央核心小组",
+                "尼共（四大）",
                 "尼泊尔工农党",
                 "尼共（民主派）",
                 "统一尼共（毛）",
@@ -387,6 +397,8 @@ class RaimajhiHoverTest(unittest.TestCase):
             }
             <= labels
         )
+        relation_ids = set(self.frames["organization_relations"]["relation_id"])
+        self.assertIn("relation_nucleus_fourth_congress", relation_ids)
         meta = self.figure.layout.meta
         self.assertEqual(len(meta["focus_stage_annotations"]), len(stages))
         self.assertTrue(

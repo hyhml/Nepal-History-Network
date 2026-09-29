@@ -12,7 +12,7 @@ python3 -m venv .venv
 .venv/bin/python build_chart.py
 ```
 
-输出在 `output/nepal-history-network.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用该数据；其他机器使用仓库内的结构化示例。当前两个数据目录已同步为26个人物、34个真实组织、20条主列和5条支线节点；原有21位共产党人物主要依据书内第60页之前的相关内容，新增5位大会党人物另使用书中相关后续章节。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
+输出在 `output/nepal-history-network.html`。本机若有 `materials/local/datasets/raimajhi-life/`，默认使用该数据；其他机器使用仓库内的结构化示例。当前两个数据目录已同步为26个人物、34个真实组织、18条主列和5条支线节点；原有21位共产党人物主要依据书内第60页之前的相关内容，新增5位大会党人物另使用书中相关后续章节。可用 `--data-dir` 和 `--output` 指定项目内的其他目录。
 
 更新在线图时运行：
 

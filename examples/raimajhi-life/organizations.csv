@@ -20,8 +20,8 @@ all_india_nepal_national_congress,全印尼泊尔国民大会党,全印尼泊尔
 nepal_national_congress,尼泊尔国民大会党,尼泊尔国民大会党,#B45B6A,16,1947年由全印尼泊尔国民大会党等合并改组,lane_nepali_congress
 nepal_democratic_congress,尼泊尔民主大会党,尼泊尔民主大会党,#C06D7A,16,1948年从尼泊尔国民大会党分裂；1950年参与合并,lane_nepal_democratic_congress_branch
 national_democratic_party,国家民主党,国家民主党,#5E8C6A,16,马·普·柯伊拉腊退出大会党后另组,lane_national_democratic_party_branch
-ncp_central_nucleus,尼共中央核心小组,尼共中央核心小组,#6B8E23,17,,lane_central_nucleus
-ncp_fourth_congress,尼共（四大）,尼共（四大）,#A66A2E,18,,lane_fourth_congress
+ncp_central_nucleus,尼共中央核心小组,尼共中央核心小组,#6B8E23,17,1971—1973年试图恢复历史上统一的尼共,lane_ncp_unified
+ncp_fourth_congress,尼共（四大）,尼共（四大）,#A66A2E,18,1974年成立并自称延续历史尼共,lane_ncp_unified
 ncp_masal,尼共（Masal）,尼共（Masal）,#9C755F,19,辛格领导的组织,lane_masal
 ncp_masal_sharma,尼共（Masal）,尼共（Masal）,#B07AA1,20,迪纳·纳特·夏尔玛1999年另组,lane_masal_sharma
 ncp_mashal,尼共（Mashal）,尼共（Mashal）,#BC7C12,21,,lane_mashal

@@ -31,6 +31,7 @@ relation_front_maoist,united_peoples_front,ncp_maoist,merge,1995-03-01,巴特拉
 relation_pushpa_workers_org,ncp_pushpa_lal,nepal_workers_peasants_org,split,1976-01-01,罗希特1971年脱离什雷斯塔并于1976年创建尼泊尔工农组织,year,WTY-P33-P34,narayan_man_bijukchhe;pushpa_lal_shrestha
 relation_workers_org_party,nepal_workers_peasants_org,nepal_workers_peasants_party,renamed,1991-01-01,罗希特将尼泊尔工农组织改名为尼泊尔工农党,year,WTY-P33-P34,narayan_man_bijukchhe
 relation_ncp_central_nucleus,ncp_unified,ncp_central_nucleus,formalized,1971-01-01,阿迪卡里、沙穆布·拉姆·什雷斯塔和辛格组建尼共中央核心小组,year,WTY-P30-P34,adhikari;shambhu_ram_shrestha;mohan_bikram_singh
+relation_nucleus_fourth_congress,ncp_central_nucleus,ncp_fourth_congress,formalized,1974-09-15,中央核心小组解散后，辛格与尼莫·拉玛另建尼共（四大）并以党名表示延续历史尼共,day,WTY-P34-P36,mohan_bikram_singh;nirmal_lama
 relation_masal_sharma,ncp_masal,ncp_masal_sharma,split,1999-01-01,迪纳·纳特·夏尔玛带领一部分人另组尼共（Masal）,year,WTY-P38-P39,dina_nath_sharma;mohan_bikram_singh
 relation_sharma_maoist,ncp_masal_sharma,ncp_maoist,merge,1999-12-31,夏尔玛领导的党不久并入尼共（毛）；日期仅为图示定位,uncertain,WTY-P38-P39,dina_nath_sharma
 relation_people_front_vaidya,united_peoples_front,united_peoples_front_vaidya,split,1994-07-14,尼兰詹·戈文达·维迪亚带支持者另立同名人民统一战线,day,WTY-P49-P55,niranjan_govinda_vaidya;baburam_bhattarai;prachanda
