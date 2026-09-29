@@ -1,7 +1,10 @@
 org_id,name_zh,short_name,color,display_order,branch_note,lane_id
 political_background,政治背景／政权与对印关系,背景,#4D4D4D,0,,lane_background
 ncp_unified,尼共,尼共,#B22222,1,统一时期,lane_ncp_unified
+raimajhi_controlled_central,腊伊玛吉控制的中央,受控中央,#4F8CC9,2,1962年被三大开除后仍控制的另一中央；不是正式党名,lane_raimajhi
 ncp_raimajhi,尼共（腊伊玛吉）,尼共（腊伊玛吉）,#1F77B4,2,,lane_raimajhi
+raimajhi_new_party_1983,腊伊玛吉另立的新党,另立新党（书中未载党名）,#3973A8,2,1983年被开除后另立；原书未载正式党名,lane_raimajhi
+nepal_people_party_social_democratic,尼泊尔人民党（社会民主主义）,尼泊尔人民党（社会民主主义）,#6B9AC4,2,1991年大选前组成；竞选失败后解散,lane_raimajhi
 ncp_manandhar,尼共（马南达尔）,尼共（马南达尔）,#2CA02C,3,,lane_manandhar
 ncp_burma,尼共（布尔玛）,尼共（布尔玛）,#D95F02,4,,lane_burma
 ncp_united_1991,尼共（联合）,尼共（联合）,#6A3D9A,5,1991年由民主派、布尔玛派和阿玛提亚派联合组建,lane_manandhar

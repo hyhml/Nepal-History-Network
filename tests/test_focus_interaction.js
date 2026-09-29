@@ -25,8 +25,23 @@ function control(selector) {
 const rail = {querySelector: control};
 const domListeners = {};
 const documentListeners = {};
+const windowListeners = {};
 const plotlyListeners = {};
 const pendingTimers = [];
+const appendedElements = [];
+function genericElement() {
+  const classes = new Set();
+  return {
+    id: '', className: '', innerHTML: '', textContent: '',
+    style: {}, dataset: {}, children: [],
+    classList: {
+      toggle(name, enabled) { enabled ? classes.add(name) : classes.delete(name); },
+      contains(name) { return classes.has(name); },
+    },
+    appendChild(child) { this.children.push(child); },
+    setAttribute() {},
+  };
+}
 const gd = {
   data: [
     {meta: {person_id: 'prachanda'}, opacity: 0.2},
@@ -38,10 +53,14 @@ const gd = {
       organization_lane_people: {lane_raimajhi: ['raimajhi']},
       organization_lane_options: [{id: 'lane_raimajhi', name: '腊伊玛吉谱系', kind: 'main'}],
       organization_lane_axis_ids: ['lane_background', 'lane_ncp_unified', 'lane_raimajhi'],
+      organization_lane_tick_values: [0, 1, 2],
+      organization_lane_tick_texts: ['背景', '尼共谱系', '腊伊玛吉谱系'],
+      organization_lane_header_height: 170,
     },
     xaxis: {range: [-0.6, 19.6]}, yaxis: {range: [0, 1]},
   },
-  _fullLayout: {xaxis: {range: [-0.6, 19.6]}},
+  _fullLayout: {xaxis: {range: [-0.6, 19.6], _offset: 100, l2p: value => value * 210}},
+  getBoundingClientRect: () => ({left: -180, top: -300, bottom: 2100, width: 4110}),
   querySelector(selector) {
     if (selector === '.nsewdrag') return {getBoundingClientRect: () => ({left: 100, top: 200, width: 1000, height: 600})};
     return null;
@@ -51,8 +70,9 @@ const gd = {
 };
 const document = {
   getElementById: () => gd,
-  createElement: tag => tag === 'aside' ? rail : {appendChild() {}},
-  head: {appendChild() {}}, body: {appendChild() {}},
+  createElement: tag => tag === 'aside' ? rail : genericElement(),
+  head: {appendChild(element) { appendedElements.push(element); }},
+  body: {appendChild(element) { appendedElements.push(element); }},
   addEventListener(type, handler) { (documentListeners[type] ||= []).push(handler); },
 };
 const Plotly = {
@@ -64,8 +84,18 @@ const Plotly = {
 const window = {
   setTimeout(handler) { pendingTimers.push(handler); },
   scrollTo() {},
+  addEventListener(type, handler) { (windowListeners[type] ||= []).push(handler); },
 };
 vm.runInNewContext(html.slice(start, end), {document, window, Plotly});
+
+const stickyHeader = appendedElements.find(element => element.id === 'sticky-lane-header');
+assert.ok(stickyHeader, 'sticky organization header is created');
+assert.equal(stickyHeader.children.length, 3, 'sticky header mirrors all organization columns');
+assert.ok(stickyHeader.classList.contains('is-visible'), 'sticky header appears after original labels scroll away');
+assert.equal(stickyHeader.style.left, '-180px', 'sticky header follows horizontal page scrolling');
+assert.equal(stickyHeader.children[2].style.left, '520px', 'sticky labels use Plotly axis coordinates');
+assert.ok(windowListeners.scroll?.length, 'sticky header listens for page scrolling');
+assert.ok(plotlyListeners.plotly_relayout, 'sticky header updates after Plotly zooming');
 
 function pointer(type, x, y = 400) {
   const listeners = type === 'pointerdown' ? domListeners[type] : documentListeners[type];

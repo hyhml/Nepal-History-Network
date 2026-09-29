@@ -113,7 +113,13 @@ def validate_references(frames: dict[str, pd.DataFrame]) -> None:
 
         if "organization_lane_headers" in frames:
             headers = frames["organization_lane_headers"]
-            required_header_columns = {"lane_id", "header_order", "label", "is_primary"}
+            required_header_columns = {
+                "lane_id",
+                "header_order",
+                "reference_type",
+                "reference_id",
+                "is_primary",
+            }
             missing_header_columns = required_header_columns - set(headers.columns)
             if missing_header_columns:
                 raise ValueError(
@@ -137,6 +143,15 @@ def validate_references(frames: dict[str, pd.DataFrame]) -> None:
                 )
             if headers.duplicated(["lane_id", "header_order"]).any():
                 raise ValueError("复合列头的 lane_id 与 header_order 组合必须唯一")
+            if headers["reference_id"].duplicated().any():
+                raise ValueError("复合列头的 reference_id 必须唯一")
+            invalid_reference_types = sorted(
+                set(headers["reference_type"].str.lower()) - {"stage", "organization"}
+            )
+            if invalid_reference_types:
+                raise ValueError(
+                    "复合列头的 reference_type 只能是 stage 或 organization"
+                )
             invalid_primary = sorted(
                 set(headers["is_primary"].str.lower()) - {"yes", "no"}
             )
@@ -151,6 +166,58 @@ def validate_references(frames: dict[str, pd.DataFrame]) -> None:
             )
             if not primary_counts.eq(1).all():
                 raise ValueError("每个复合列头必须且只能标记一个主要组织")
+            if (headers.groupby("lane_id").size() < 2).any():
+                raise ValueError("复合列头必须至少包含两个按时间排列的条目")
+
+            stages = frames.get("organization_stages", pd.DataFrame())
+            if not stages.empty and stages["stage_id"].duplicated().any():
+                raise ValueError("organization_stages.csv 含重复 stage_id")
+            known_stages = set(stages.get("stage_id", pd.Series(dtype=str)))
+            organization_lanes = dict(
+                zip(frames["organizations"]["org_id"], frames["organizations"]["lane_id"])
+            )
+            stage_organizations = (
+                dict(zip(stages["stage_id"], stages["org_id"]))
+                if not stages.empty
+                else {}
+            )
+            for header in headers.itertuples(index=False):
+                reference_type = str(header.reference_type).lower()
+                if reference_type == "stage":
+                    if header.reference_id not in known_stages:
+                        raise ValueError(
+                            "复合列头含未知 stage_id：" + str(header.reference_id)
+                        )
+                    reference_org = stage_organizations[header.reference_id]
+                else:
+                    if header.reference_id not in organizations:
+                        raise ValueError(
+                            "复合列头含未知 org_id：" + str(header.reference_id)
+                        )
+                    reference_org = header.reference_id
+                    if stages.empty or not stages["org_id"].eq(reference_org).any():
+                        raise ValueError(
+                            "组织型复合列头必须能从 organization_stages.csv 推导年代："
+                            + str(reference_org)
+                        )
+                if reference_org not in organization_lanes:
+                    raise ValueError(
+                        "复合列头引用阶段含未知组织：" + str(reference_org)
+                    )
+                if organization_lanes[reference_org] != header.lane_id:
+                    raise ValueError(
+                        "复合列头引用对象与 lane_id 不一致：" + str(header.reference_id)
+                    )
+
+            resolved_headers = resolve_lane_header_entries(
+                headers, stages, frames["organizations"]
+            )
+            for lane_id, rows in resolved_headers.groupby("lane_id", sort=False):
+                rows = rows.sort_values("header_order")
+                if not rows["start_date"].is_monotonic_increasing:
+                    raise ValueError(
+                        f"复合列头 {lane_id} 未按起始年代排列"
+                    )
 
     for table_name in ("tenures", "events"):
         table = frames[table_name]
@@ -293,15 +360,73 @@ def format_tenure_date(value: pd.Timestamp, precision: str) -> str:
     return f"{value.year}年{value.month}月{value.day}日"
 
 
+def format_header_year_range(start_date: pd.Timestamp, end_date: pd.Timestamp) -> str:
+    """Format compact, precision-safe years for a composite lane header."""
+    start_year = pd.Timestamp(start_date).year
+    end_year = pd.Timestamp(end_date).year
+    return str(start_year) if start_year == end_year else f"{start_year}—{end_year}"
+
+
+def resolve_lane_header_entries(
+    lane_headers: pd.DataFrame,
+    stages: pd.DataFrame,
+    organizations: pd.DataFrame,
+) -> pd.DataFrame:
+    """Resolve header references so names and years have one source of truth."""
+    columns = [
+        "lane_id",
+        "header_order",
+        "label",
+        "start_date",
+        "end_date",
+        "is_primary",
+        "reference_type",
+        "reference_id",
+    ]
+    if lane_headers.empty:
+        return pd.DataFrame(columns=columns)
+
+    stage_by_id = stages.set_index("stage_id")
+    organization_by_id = organizations.set_index("org_id")
+    rows: list[dict[str, object]] = []
+    for header in lane_headers.itertuples(index=False):
+        reference_type = str(header.reference_type).lower()
+        if reference_type == "stage":
+            referenced = stage_by_id.loc[header.reference_id]
+            label = referenced["label"]
+            start_date = referenced["start_date"]
+            end_date = referenced["end_date"]
+        else:
+            referenced = organization_by_id.loc[header.reference_id]
+            label = referenced["short_name"] or referenced["name_zh"]
+            organization_stages = stages[stages["org_id"] == header.reference_id]
+            start_date = organization_stages["start_date"].min()
+            end_date = organization_stages["end_date"].max()
+        rows.append(
+            {
+                "lane_id": header.lane_id,
+                "header_order": int(header.header_order),
+                "label": label,
+                "start_date": start_date,
+                "end_date": end_date,
+                "is_primary": header.is_primary,
+                "reference_type": reference_type,
+                "reference_id": header.reference_id,
+            }
+        )
+    return pd.DataFrame(rows, columns=columns)
+
+
 def build_lane_tick_texts(
     display_lanes: pd.DataFrame,
     lane_headers: pd.DataFrame,
+    stages: pd.DataFrame,
+    organizations: pd.DataFrame,
 ) -> tuple[list[str], int]:
     """Render composite lane names as horizontal text in a vertical chronology."""
     entries_by_lane: dict[str, list[object]] = {}
     if not lane_headers.empty:
-        ordered = lane_headers.copy()
-        ordered["header_order"] = ordered["header_order"].astype(int)
+        ordered = resolve_lane_header_entries(lane_headers, stages, organizations)
         ordered = ordered.sort_values(["lane_id", "header_order"])
         for lane_id, rows in ordered.groupby("lane_id", sort=False):
             entries_by_lane[lane_id] = list(rows.itertuples(index=False))
@@ -317,7 +442,12 @@ def build_lane_tick_texts(
                 label = escape(str(entry.label))
                 if str(entry.is_primary).lower() == "yes":
                     label = f"<b>{label}</b>"
-                labels.append(f"<span style='white-space:nowrap'>{label}</span>")
+                years = format_header_year_range(entry.start_date, entry.end_date)
+                labels.append(
+                    "<span style='white-space:nowrap'>"
+                    f"{label} <span style='font-size:10px;color:#64748b'>"
+                    f"（{years}）</span></span>"
+                )
             tick_texts.append(
                 "<br><span style='font-size:12px;color:#64748b'>↓</span><br>".join(labels)
             )
@@ -433,7 +563,7 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
         org_id: lane_type_by_id[lane_id] for org_id, lane_id in lane_for_org.items()
     }
     lane_tick_texts, max_header_entries = build_lane_tick_texts(
-        display_lanes, lane_headers
+        display_lanes, lane_headers, stages, organizations
     )
     chart_height = max(1500, min(2400, 850 + len(events) * 13))
     chart_width = max(1600, len(display_lanes) * 210 + 330)
@@ -958,6 +1088,17 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "gridcolor": "#EAEAEA",
         },
     )
+    fig.add_annotation(
+        xref="paper",
+        yref="paper",
+        x=0,
+        y=1.045,
+        xanchor="left",
+        yanchor="bottom",
+        showarrow=False,
+        text="↓ 表示按时间先后排列并归入同一谱系列，不必然表示直接改名或合并",
+        font={"size": 12, "color": "#64748b"},
+    )
     lane_people: dict[str, list[str]] = {}
     for org_id, lane_id in lane_for_org.items():
         members = set(tenures.loc[tenures["org_id"] == org_id, "person_id"])
@@ -981,6 +1122,9 @@ def build_figure(frames: dict[str, pd.DataFrame], title: str) -> go.Figure:
             "organization_lane_people": lane_people,
             "organization_lane_options": lane_options,
             "organization_lane_axis_ids": display_lanes["lane_id"].tolist(),
+            "organization_lane_tick_values": display_lanes["display_order"].tolist(),
+            "organization_lane_tick_texts": lane_tick_texts,
+            "organization_lane_header_height": 50 + max_header_entries * 30,
         }
     )
     return fig
@@ -1015,6 +1159,9 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
   const lanePeople = stageMeta.organization_lane_people || {};
   const laneOptions = stageMeta.organization_lane_options || [];
   const axisLaneIds = stageMeta.organization_lane_axis_ids || [];
+  const laneTickValues = stageMeta.organization_lane_tick_values || [];
+  const laneTickTexts = stageMeta.organization_lane_tick_texts || [];
+  const stickyLaneHeaderHeight = stageMeta.organization_lane_header_height || 170;
   const initialXRange = Array.isArray(gd.layout.xaxis.range) ? gd.layout.xaxis.range.slice() : null;
   const initialYRange = Array.isArray(gd.layout.yaxis.range) ? gd.layout.yaxis.range.slice() : null;
 
@@ -1043,7 +1190,7 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
       <li>点“全部人物”：取消人物聚焦</li>
       <li>点击组织列名或列内空白色带，或使用下拉框：聚焦该列人物</li>
     </ul>
-    <small>组织成员为 60%，选中人物为 100%，其他人物为 20%。点到人物或关系线时仍由其自身交互响应。</small>
+    <small>组织成员为 60%，选中人物为 100%，其他人物为 20%。点到人物或关系线时仍由其自身交互响应。列头中的 ↓ 只表示时间顺序与谱系归类，不必然表示直接改名或合并。</small>
   `;
   const style = document.createElement('style');
   style.textContent = `
@@ -1059,10 +1206,49 @@ def build_focus_post_script(people: pd.DataFrame) -> str:
     #person-focus-rail ul { margin: 5px 0 12px; padding-left: 18px; } #person-focus-rail li { margin: 4px 0; }
     #person-focus-rail small { display: block; color: #59636e; }
     #temporal_network .xaxislayer-above .xtick { cursor: pointer; }
+    #sticky-lane-header { display: none; position: fixed; z-index: 900; top: 0; box-sizing: border-box; overflow: hidden; border-bottom: 1px solid #cbd5e1; background: rgba(255,255,255,.97); box-shadow: 0 2px 8px rgba(15,23,42,.12); pointer-events: none; }
+    #sticky-lane-header.is-visible { display: block; }
+    #sticky-lane-header .sticky-lane-item { position: absolute; top: 9px; width: 202px; transform: translateX(-50%); text-align: center; color: #263238; font: 12px/1.18 "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; }
     @media (max-width: 900px) { #person-focus-rail { top: auto; right: 8px; bottom: 8px; width: 230px; max-height: 55vh; } }
   `;
   document.head.appendChild(style);
   document.body.appendChild(rail);
+  const stickyLaneHeader = document.createElement('div');
+  stickyLaneHeader.id = 'sticky-lane-header';
+  stickyLaneHeader.setAttribute('aria-hidden', 'true');
+  stickyLaneHeader.style.height = `${stickyLaneHeaderHeight}px`;
+  const stickyLaneItems = laneTickTexts.map((tickText, index) => {
+    const item = document.createElement('div');
+    item.className = 'sticky-lane-item';
+    item.dataset.tickValue = String(laneTickValues[index]);
+    item.innerHTML = tickText;
+    stickyLaneHeader.appendChild(item);
+    return item;
+  });
+  document.body.appendChild(stickyLaneHeader);
+
+  function updateStickyLaneHeader() {
+    const xaxis = gd._fullLayout && gd._fullLayout.xaxis;
+    if (!xaxis || typeof xaxis.l2p !== 'function' ||
+        typeof gd.getBoundingClientRect !== 'function') return;
+    const rect = gd.getBoundingClientRect();
+    stickyLaneHeader.style.left = `${rect.left}px`;
+    stickyLaneHeader.style.width = `${rect.width}px`;
+    stickyLaneItems.forEach((item, index) => {
+      item.style.left = `${xaxis._offset + xaxis.l2p(laneTickValues[index])}px`;
+    });
+    const originalHeaderHasPassed = rect.top < -Math.min(stickyLaneHeaderHeight, 160);
+    const chartStillVisible = rect.bottom > stickyLaneHeaderHeight;
+    stickyLaneHeader.classList.toggle(
+      'is-visible', originalHeaderHasPassed && chartStillVisible
+    );
+  }
+  updateStickyLaneHeader();
+  if (typeof window.addEventListener === 'function') {
+    window.addEventListener('scroll', updateStickyLaneHeader, {passive: true});
+    window.addEventListener('resize', updateStickyLaneHeader);
+  }
+  gd.on('plotly_relayout', updateStickyLaneHeader);
   const search = rail.querySelector('#person-focus-search');
   const options = rail.querySelector('#person-focus-options');
   const status = rail.querySelector('#focus-status');

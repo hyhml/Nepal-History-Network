@@ -1,5 +1,7 @@
 relation_id,source_org_id,target_org_id,relation_type,event_date,description,date_precision,source_id,related_person_ids
-relation_two_centres,ncp_unified,ncp_raimajhi,split,1962-04-01,被三大开除后拒绝处分并继续控制另一中央；书中称实际形成两个中央,month,WTY-P31,raimajhi
+relation_two_centres,ncp_unified,raimajhi_controlled_central,split,1962-04-01,被三大开除后拒绝处分并继续控制另一中央；书中称实际形成两个中央,month,WTY-P31,raimajhi
+relation_raimajhi_formal_centre,raimajhi_controlled_central,ncp_raimajhi,formalized,1966-01-01,腊伊玛吉由控制另一中央转为正式另立中央；1967年另开“三大”,year,WTY-P31,raimajhi
+relation_raimajhi_new_party_1983,ncp_raimajhi,raimajhi_new_party_1983,split,1983-07-01,被布尔玛开除后，腊伊玛吉带领追随者另立新党；原书未载正式党名,uncertain,WTY-P32,raimajhi;krishna_raj_burma
 relation_manandhar_split,ncp_raimajhi,ncp_manandhar,split,1981-01-01,马南达尔带领一大部分党员脱离并另立尼共（马南达尔）,year,WTY-P32,raimajhi;bishnu_manandhar
 relation_adhikari_unity_marxist,ncp_unity_congress,ncp_marxist,merge,1986-01-01,尼共（统一大会）的一部分并入普拉丹领导的组织并组建尼共（马）,year,WTY-P30;WTY-P33,adhikari;sahana_pradhan
 relation_adhikari_marxist_uml,ncp_marxist,ncp_uml,merge,1991-01-01,尼共（马）与尼共（马列）联合成立尼共（联合马列）,year,WTY-P30;WTY-P33,adhikari;sahana_pradhan;madan_bhandari

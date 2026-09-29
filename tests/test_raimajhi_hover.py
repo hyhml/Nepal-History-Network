@@ -8,6 +8,7 @@ from build_chart import (
     build_figure,
     build_focus_post_script,
     load_data,
+    resolve_lane_header_entries,
     validate_references,
 )
 
@@ -325,6 +326,12 @@ class RaimajhiHoverTest(unittest.TestCase):
     def test_lineages_share_display_lanes_without_merging_data(self):
         organizations = self.frames["organizations"].set_index("org_id")
         expected_groups = {
+            "lane_raimajhi": {
+                "raimajhi_controlled_central",
+                "ncp_raimajhi",
+                "raimajhi_new_party_1983",
+                "nepal_people_party_social_democratic",
+            },
             "lane_ncp_unified": {
                 "ncp_unified",
                 "ncp_central_nucleus",
@@ -364,6 +371,10 @@ class RaimajhiHoverTest(unittest.TestCase):
         headers = self.frames["organization_lane_headers"].copy()
         self.assertEqual(len(headers), 25)
         self.assertEqual(headers["lane_id"].nunique(), 9)
+        self.assertNotIn("label", headers.columns)
+        self.assertEqual(
+            set(headers["reference_type"]), {"stage", "organization"}
+        )
         primary_counts = (
             headers.assign(_primary=headers["is_primary"].eq("yes"))
             .groupby("lane_id")["_primary"]
@@ -376,13 +387,24 @@ class RaimajhiHoverTest(unittest.TestCase):
         self.assertEqual(self.figure.layout.xaxis.tickangle, 0)
         self.assertGreaterEqual(self.figure.layout.margin.t, 280)
 
-        for lane_id, rows in headers.groupby("lane_id"):
+        resolved = resolve_lane_header_entries(
+            headers,
+            self.frames["organization_stages"],
+            self.frames["organizations"],
+        )
+        for lane_id, rows in resolved.groupby("lane_id"):
             rows = rows.sort_values("header_order")
             tick = tick_texts[lane_id]
             labels = list(rows["label"])
             self.assertEqual(tick.count("↓"), len(labels) - 1)
             positions = [tick.index(label) for label in labels]
             self.assertEqual(positions, sorted(positions))
+            self.assertTrue(rows["start_date"].is_monotonic_increasing)
+            for row in rows.itertuples(index=False):
+                start_year = row.start_date.year
+                end_year = row.end_date.year
+                years = str(start_year) if start_year == end_year else f"{start_year}—{end_year}"
+                self.assertIn(f"（{years}）", tick)
             primary = rows.loc[rows["is_primary"] == "yes", "label"].item()
             self.assertIn(f"<b>{primary}</b>", tick)
 
@@ -391,7 +413,42 @@ class RaimajhiHoverTest(unittest.TestCase):
         self.assertIn("全印尼泊尔国民大会党", congress_tick)
         self.assertIn("尼泊尔国民大会党", congress_tick)
         self.assertIn("<b>大会党</b>", congress_tick)
+        self.assertIn("（1950—2012）", congress_tick)
         self.assertNotIn("党禁时期", congress_tick)
+
+    def test_composite_header_references_cannot_drift_from_stages(self):
+        frames = {name: frame.copy() for name, frame in self.frames.items()}
+        headers = frames["organization_lane_headers"]
+        target = headers["reference_id"] == "stage_ncp_raimajhi"
+        headers.loc[target, "reference_id"] = "stage_nepal_democratic_congress"
+        with self.assertRaisesRegex(ValueError, "lane_id 不一致"):
+            validate_references(frames)
+
+    def test_raimajhi_lineage_uses_distinct_real_organization_ids(self):
+        stages = self.frames["organization_stages"].set_index("stage_id")
+        expected = {
+            "stage_contested": "raimajhi_controlled_central",
+            "stage_ncp_raimajhi": "ncp_raimajhi",
+            "stage_new_party": "raimajhi_new_party_1983",
+            "stage_people_party": "nepal_people_party_social_democratic",
+        }
+        self.assertEqual(
+            {stage_id: stages.loc[stage_id, "org_id"] for stage_id in expected},
+            expected,
+        )
+        self.assertEqual(len(set(expected.values())), 4)
+        self.assertIn("书中未载党名", stages.loc["stage_new_party", "label"])
+
+        events = self.frames["events"].set_index("event_id")
+        self.assertEqual(
+            events.loc["event_1991_people_party", "org_id"],
+            "nepal_people_party_social_democratic",
+        )
+        tenures = self.frames["tenures"].set_index("tenure_id")
+        self.assertEqual(
+            tenures.loc["raimajhi_post_1983_party", "org_id"],
+            "raimajhi_new_party_1983",
+        )
 
     def test_short_lived_single_person_orgs_are_branch_nodes(self):
         lanes = self.frames["organization_lanes"].set_index("lane_id")
@@ -454,6 +511,9 @@ class RaimajhiHoverTest(unittest.TestCase):
                 self.assertEqual(trace.opacity, 0.20)
         self.assertIn("function resetToDefault() { resetViewAndControls(defaultSelection); }", script)
         self.assertIn("function showAllPeople()", script)
+        self.assertIn("function updateStickyLaneHeader()", script)
+        self.assertIn("plotly_relayout", script)
+        self.assertIn("只表示时间顺序与谱系归类", script)
 
 
 if __name__ == "__main__":

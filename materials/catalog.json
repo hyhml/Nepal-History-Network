@@ -14,7 +14,7 @@
     "kind": "datasets",
     "scope": "local",
     "path": "materials/local/datasets/raimajhi-life",
-    "note": "含原书摘录与组织—显示谱系映射，供本机图中悬浮说明使用。"
+    "note": "含原书摘录、37个真实组织与组织—显示谱系映射，供本机图中悬浮说明使用。"
   },
   {
     "id": "raimajhi-life-example",
@@ -22,6 +22,6 @@
     "kind": "datasets",
     "scope": "tracked",
     "path": "examples/raimajhi-life",
-    "note": "含事件、背景节点的书中摘录及组织—显示谱系映射；可直接生成公开交互图。"
+    "note": "含事件、背景节点的书中摘录、37个真实组织及组织—显示谱系映射；可直接生成公开交互图。"
   }
 ]

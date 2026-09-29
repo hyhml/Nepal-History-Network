@@ -2,10 +2,10 @@ stage_id,org_id,label,start_date,end_date,show_boundary,x_offset,related_person_
 stage_ncp_unified,ncp_unified,尼共〔统一时期〕,1949-04-22,1968-01-01,no,-0.16,adhikari;raimajhi;pushpa_lal_shrestha;mohan_bikram_singh;tulsi_lal_amatya;shambhu_ram_shrestha;niranjan_govinda_vaidya
 stage_central_nucleus,ncp_central_nucleus,尼共中央核心小组,1971-01-01,1973-01-01,yes,-0.16,adhikari;shambhu_ram_shrestha;mohan_bikram_singh
 stage_fourth_congress,ncp_fourth_congress,尼共（四大）,1974-09-15,1990-11-19,yes,-0.16,mohan_bikram_singh;nirmal_lama;prachanda;baburam_bhattarai;mohan_vaidya
-stage_contested,ncp_raimajhi,腊伊玛吉控制的中央,1962-04-01,1966-01-01,no,-0.16,raimajhi
+stage_contested,raimajhi_controlled_central,腊伊玛吉控制的中央,1962-04-01,1966-01-01,no,-0.16,raimajhi
 stage_ncp_raimajhi,ncp_raimajhi,尼共（腊伊玛吉）,1966-01-01,1983-07-01,yes,-0.16,raimajhi
-stage_new_party,ncp_raimajhi,再次建党,1983-07-01,1986-01-01,yes,-0.16,raimajhi
-stage_people_party,ncp_raimajhi,尼泊尔人民党,1991-01-01,1991-05-31,yes,-0.16,raimajhi
+stage_new_party,raimajhi_new_party_1983,腊伊玛吉另立的新党〔书中未载党名〕,1983-07-01,1986-01-01,yes,-0.16,raimajhi
+stage_people_party,nepal_people_party_social_democratic,尼泊尔人民党（社会民主主义）,1991-01-01,1991-05-31,yes,-0.16,raimajhi
 stage_manandhar_party,ncp_manandhar,尼共（马南达尔）,1981-01-01,1991-01-01,no,-0.16,bishnu_manandhar
 stage_manandhar_democratic,ncp_manandhar,尼共（民主派）,1991-01-01,1991-07-01,yes,-0.16,bishnu_manandhar
 stage_manandhar_united,ncp_united_1991,尼共（联合）,1991-07-01,2005-01-01,yes,-0.16,bishnu_manandhar;krishna_raj_burma;tulsi_lal_amatya
